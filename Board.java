@@ -8,7 +8,6 @@ import java.util.List;
 // être le cas)
 class Board {
     private Mark[][] board;
-
     // Ne pas changer la signature de cette méthode
     public Board()throws IOException {
         board = new Mark[13][13];
@@ -32,10 +31,10 @@ class Board {
     // Ne pas changer la signature de cette méthode
     public int evaluate(Mark mark) {
         Mark adversaire;
-        if (mark == Mark.X) {
-            adversaire = Mark.O;
+        if (mark == Mark.ROUGE) {
+            adversaire = Mark.NOIR;
         } else {
-            adversaire = Mark.X;
+            adversaire = Mark.ROUGE;
         }
         for (int i = 0; i < 3; i++) {
             if ((board[i][0] == mark && board[i][1] == mark && board[i][2] == mark) ||
