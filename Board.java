@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +10,8 @@ class Board {
     private Mark[][] board;
 
     // Ne pas changer la signature de cette méthode
-    public Board() {
+    public Board()throws IOException {
         board = new Mark[13][13];
-        board[6][6] = Mark.ROI;
-
-        
     }
 
     // Place la pièce 'mark' sur le plateau, à la
@@ -83,18 +81,39 @@ class Board {
         return false;
     }
 
-    public boolean loadFromServer(String boardValues) {
-        String[] values = boardValues.split(" ");
+    public Mark[][] loadFromServer(String[] boardValues){
+        Mark[][] tableau = new Mark[13][13];
         int x = 0, y = 0;
-        for (int i = 0; i < values.length; i++) {
-            board[x][y] = Mark.fromInt(Integer.parseInt(values[i]));
+        for (int i = 0; i < boardValues.length; i++) {
+            tableau[x][y] = conversion(Integer.parseInt(boardValues[i]));
             x++;
             if (x == 13) {
                 x = 0;
                 y++;
             }
         }
-        return true;
+
+        return tableau;
     }
+
+    public Mark conversion(int valeur){
+       switch (valeur) {
+
+        case 0:
+            return Mark.EMPTY;
+
+        case 2:
+            return Mark.NOIR;
+
+        case 4:
+            return Mark.ROUGE;
+
+        case 5:
+            return Mark.ROI;
+
+        default:
+            throw new IllegalArgumentException("Valeur inconnue : " + valeur);
+    }
+}
 }
 
