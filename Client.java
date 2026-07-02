@@ -15,6 +15,7 @@ class Client {
 
 	public static void main(String[] args) {
 
+		
 		int[][] board = new int[13][13];
 
 		try {
@@ -22,6 +23,7 @@ class Client {
 			BufferedInputStream input = client.input;
 			BufferedOutputStream output = client.output;
 			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+			
 			while (1 == 1) {
 				char cmd = 0;
 				cmd = (char) input.read();
@@ -29,7 +31,6 @@ class Client {
 				// Debut de la partie en joueur rouge
 				if (cmd == '1') {
 					byte[] aBuffer = new byte[1024];
-
 					int size = input.available();
 					// System.out.println("size " + size);
 					input.read(aBuffer, 0, size);
@@ -69,7 +70,7 @@ class Client {
 					for (int i = 0; i < boardValues.length; i++) {
 						board[x][y] = Integer.parseInt(boardValues[i]);
 						x++;
-						if (x == 8) {
+						if (x == 13) {
 							x = 0;
 							y++;
 						}

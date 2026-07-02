@@ -15,6 +15,7 @@ class Board {
     }
 
     // Place la pièce 'mark' sur le plateau, à la
+    
     // position spécifiée dans Move
     //
     // Ne pas changer la signature de cette méthode
@@ -32,10 +33,10 @@ class Board {
     // Ne pas changer la signature de cette méthode
     public int evaluate(Mark mark) {
         Mark adversaire;
-        if (mark == Mark.X) {
-            adversaire = Mark.O;
+        if (mark == Mark.ROUGE) {
+            adversaire = Mark.NOIR;
         } else {
-            adversaire = Mark.X;
+            adversaire = Mark.ROUGE;
         }
         for (int i = 0; i < 3; i++) {
             if ((board[i][0] == mark && board[i][1] == mark && board[i][2] == mark) ||
@@ -73,7 +74,7 @@ class Board {
     }
 
     public boolean estfini() {
-        if (evaluate(Mark.X) == 100 || evaluate(Mark.X) == -100)
+        if (evaluate(Mark.ROUGE) == 100 || evaluate(Mark.NOIR) == -100)
             return true;
         List<Move> list = coupsPossibles();
         if (list.isEmpty())
