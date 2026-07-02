@@ -11,11 +11,12 @@ class Client {
 		MyClient = new Socket("localhost", 8888);
 		input = new BufferedInputStream(MyClient.getInputStream());
 		output = new BufferedOutputStream(MyClient.getOutputStream());
+		
 	}
 
 	public static void main(String[] args) {
 
-		
+		int coupsInvalide = 0;
 		int[][] board = new int[13][13];
 		Move dernierCoupEnvoye = null;
 		String dernierCoupEnvoyeServeur = null;
@@ -65,6 +66,11 @@ class Client {
 					String[] boardValues;
 					boardValues = s.split(" ");
 					b.loadFromServer(boardValues);
+
+					Move mouvement = iA.jouer(b, b.GetCurrentPlayer());
+					String move = formatMoveToServer(mouvement);
+					output.write(move.getBytes(), 0, move.length());
+					output.flush();
 				}
 
 				// Le serveur demande le prochain coup
@@ -104,6 +110,11 @@ class Client {
 				}
 				// Le dernier coup est invalide
 				if (cmd == '4') {
+					
+					coupsInvalide++;
+					if (coupsInvalide == 7){
+						break;
+					}
 					System.out.println("Coup invalide, entrez un nouveau coup :");
 					System.out.println("Dernière chaîne envoyée : " + dernierCoupEnvoyeServeur);
 				
