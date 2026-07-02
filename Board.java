@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +31,54 @@ class Board {
 
     // La case de départ est vide après le coup et la case d'arrivée contient la pièce.
     public void play(Move m, Mark mark) {
-        board[m.getRowDepart()][m.getColDepart()] = mark.EMPTY;
+        board[m.getRowDepart()][m.getColDepart()] = Mark.EMPTY;
         board[m.getRowArrive()][m.getColArrive()] = mark;
+        
+        int r = m.getRowArrive();
+        int c = m.getColArrive();
+        
+        Mark monCamp = (mark == Mark.ROI) ? Mark.ROUGE : mark;
+
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+        for (int[] d : directions) {
+            int voisinR = r + d[0];
+            int voisinC = c + d[1];
+            int encercleurR = r + d[0] * 2;
+            int encercleurC = c + d[1] * 2;
+
+            if (voisinR >= 0 && voisinR < 13 && voisinC >= 0 && voisinC < 13) {
+                Mark cible = board[voisinR][voisinC];
+
+                if (cible != Mark.EMPTY && !belongsTo(cible, monCamp)) {
+                    
+                    // Le pion adverse est capturé s'il est pris en sandwich :
+                    // Cas 1 : Par une autre de nos pièces de l'autre côté
+                    boolean prisParPiece = false;
+                    if (encercleurR >= 0 && encercleurR < 13 && encercleurC >= 0 && encercleurC < 13) {
+                        Mark encercleur = board[encercleurR][encercleurC];
+                        if (belongsTo(encercleur, monCamp)) {
+                            prisParPiece = true;
+                        }
+                    }
+
+                    // Cas 2 : Par une case spéciale fermée de l'autre côté
+                    boolean prisParCaseSpeciale = false;
+                    if (encercleurR >= 0 && encercleurR < 13 && encercleurC >= 0 && encercleurC < 13) {
+                        if (isClosedBox(encercleurR, encercleurC)) {
+                            prisParCaseSpeciale = true;
+                        }
+                    } else {
+                        prisParCaseSpeciale = false;
+                    }
+
+                    if ((prisParPiece || prisParCaseSpeciale) && cible != Mark.ROI) {
+                        board[voisinR][voisinC] = Mark.EMPTY;
+                        System.out.println("Capture détectée sur le plateau local en [" + voisinR + "," + voisinC + "]");
+                    }
+                }
+            }
+        }
     }
 
     // Vérifie si la pièce 'mark' appartient à un certains camp (ROUGE ou NOIR)
@@ -122,7 +167,7 @@ class Board {
     }
 
     public boolean estfini() {
-        return false;
+        return roiAuCoin() || !roiSurPlateau();
     }
 
     public Mark[][] loadFromServer(String[] boardValues){
@@ -178,4 +223,18 @@ class Board {
         }
         return false;
     }
+
+    public Board clone() {
+        Board copie = new Board();
+        copie.currentPlayer = this.currentPlayer;
+        
+        // Copie profonde de la grille de jeu
+        for (int i = 0; i < this.board.length; i++) {
+            for (int j = 0; j < this.board[i].length; j++) {
+                copie.board[i][j] = this.board[i][j];
+            }
+        }
+        return copie;
+    }
+    
 }

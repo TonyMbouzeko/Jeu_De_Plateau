@@ -1,10 +1,11 @@
 import java.util.List;
 
- class IntelligenceArtificielle {
+class IntelligenceArtificielle {
 
     private static final int MAX_DEPTH = 2; 
 
-     Move getBestMove(Board board, Mark maCouleur) {
+    Move getBestMove(Board board, Mark maCouleur) {
+        board.SetCurrentPlayer(maCouleur);
         List<Move> coups = board.coupsPossibles();
         if (coups.isEmpty()) return null;
 
@@ -14,11 +15,13 @@ import java.util.List;
         int alpha = Integer.MIN_VALUE;
         int beta = Integer.MAX_VALUE;
 
+        Mark couleurAdversaire = (maCouleur == Mark.ROUGE) ? Mark.NOIR : Mark.ROUGE;
+
         for (Move coup : coups) {
-            Mark ancienEtatCible = Mark.EMPTY; 
-            board.play(coup, maCouleur);
-            int score = alphaBeta(board, MAX_DEPTH - 1, alpha, beta, false, maCouleur);
-            board.play(coup, ancienEtatCible);
+            Board copieBoard = board.clone(); 
+            copieBoard.play(coup, maCouleur);
+            copieBoard.SetCurrentPlayer(couleurAdversaire);
+            int score = alphaBeta(copieBoard, MAX_DEPTH - 1, alpha, beta, false, maCouleur);
 
             if (score > meilleurScore) {
                 meilleurScore = score;
@@ -45,9 +48,12 @@ import java.util.List;
         if (isMax) {
             int maxEval = Integer.MIN_VALUE;
             for (Move coup : coups) {
-                board.play(coup, maCouleur);
-                int eval = alphaBeta(board, depth - 1, alpha, beta, false, maCouleur);
-                board.play(coup, Mark.EMPTY);
+                Board copieBoard = board.clone(); 
+                copieBoard.play(coup, maCouleur);
+                
+                copieBoard.SetCurrentPlayer(couleurAdversaire);
+                
+                int eval = alphaBeta(copieBoard, depth - 1, alpha, beta, false, maCouleur);
                 
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
@@ -59,9 +65,12 @@ import java.util.List;
         } else {
             int minEval = Integer.MAX_VALUE;
             for (Move coup : coups) {
-                board.play(coup, couleurAdversaire);
-                int eval = alphaBeta(board, depth - 1, alpha, beta, true, maCouleur);
-                board.play(coup, Mark.EMPTY);
+                Board copieBoard = board.clone(); 
+                copieBoard.play(coup, couleurAdversaire);
+                
+                copieBoard.SetCurrentPlayer(maCouleur);
+                
+                int eval = alphaBeta(copieBoard, depth - 1, alpha, beta, true, maCouleur);
                 
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
