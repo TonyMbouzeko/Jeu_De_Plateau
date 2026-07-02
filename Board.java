@@ -66,6 +66,17 @@ class Board {
             }else{
                 return -100;
             }
+        }else if (!roiSurPlateau()){
+            if (mark == Mark.ROUGE){
+                return 100;
+            }else{
+                return -100;
+            }
+        }
+        List<Move> coups = coupsPossibles(mark);
+
+        if (!coups.isEmpty()){
+            return 0;
         }
 
         return 0;
@@ -153,6 +164,17 @@ class Board {
     public boolean roiAuCoin(){
          if (board[0][0] == Mark.ROI || board[0][12] == Mark.ROI || board[12][12]== Mark.ROI || board[12][0] == Mark.ROI ){
             return true;
+        }
+        return false;
+    }
+
+    public boolean roiSurPlateau(){
+        for (int i =0; i< board.length; i++){
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == Mark.ROI){
+                    return true;
+                }
+            }
         }
         return false;
     }
