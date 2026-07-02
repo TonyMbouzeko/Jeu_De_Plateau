@@ -19,10 +19,10 @@ class CPUPlayer {
     // joueur MAX (X ou O)
     public CPUPlayer(Mark cpu) {
         this.cpu = cpu;
-        if (cpu == Mark.X) {
-            adversaire = Mark.O;
+        if (cpu == Mark.ROUGE) {
+            adversaire = Mark.NOIR;
         } else {
-            adversaire = Mark.X;
+            adversaire = Mark.ROUGE;
         }
     }
 
@@ -37,7 +37,7 @@ class CPUPlayer {
     public ArrayList<Move> getNextMoveMinMax(Board board) {
         numExploredNodes = 0;
         int meilleurScore = -200;
-        List<Move> list = board.coupsPossibles();
+        List<Move> list = board.coupsPossibles(cpu);
         ArrayList<Move> bonCoups = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             board.play(list.get(i), cpu);
@@ -60,7 +60,7 @@ class CPUPlayer {
     public ArrayList<Move> getNextMoveAB(Board board) {
         numExploredNodes = 0;
         int meilleurScrore = -200;
-        List<Move> list = board.coupsPossibles();
+        List<Move> list = board.coupsPossibles(cpu);
         ArrayList<Move> bonCoups = new ArrayList<>();
         for (Move move : list) {
             board.play(move, cpu);

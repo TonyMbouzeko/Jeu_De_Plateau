@@ -15,10 +15,9 @@ class Client {
 
 	public static void main(String[] args) {
 
-		int[][] board = new int[13][13];
-
 		try {
 			Client client = new Client();
+			Board b = new Board();
 			BufferedInputStream input = client.input;
 			BufferedOutputStream output = client.output;
 			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -28,6 +27,7 @@ class Client {
 				System.out.println(cmd);
 				// Debut de la partie en joueur rouge
 				if (cmd == '1') {
+					b.SetCurrentPlayer(Mark.ROUGE);
 					byte[] aBuffer = new byte[1024];
 
 					int size = input.available();
@@ -37,15 +37,7 @@ class Client {
 					System.out.println(s);
 					String[] boardValues;
 					boardValues = s.split(" ");
-					int x = 0, y = 0;
-					for (int i = 0; i < boardValues.length; i++) {
-						board[x][y] = Integer.parseInt(boardValues[i]);
-						x++;
-						if (x == 13) {
-							x = 0;
-							y++;
-						}
-					}
+					b.loadFromServer(boardValues);
 
 					System.out.println("Nouvelle partie! Vous jouer rouge, entrez votre premier coup : ");
 					String move = null;
@@ -55,6 +47,7 @@ class Client {
 				}
 				// Debut de la partie en joueur Noir
 				if (cmd == '2') {
+					b.SetCurrentPlayer(Mark.NOIR);
 					System.out.println("Nouvelle partie! Vous jouer noir, attendez le coup des rouges");
 					byte[] aBuffer = new byte[1024];
 
@@ -65,15 +58,7 @@ class Client {
 					System.out.println(s);
 					String[] boardValues;
 					boardValues = s.split(" ");
-					int x = 0, y = 0;
-					for (int i = 0; i < boardValues.length; i++) {
-						board[x][y] = Integer.parseInt(boardValues[i]);
-						x++;
-						if (x == 8) {
-							x = 0;
-							y++;
-						}
-					}
+					b.loadFromServer(boardValues);
 				}
 
 				// Le serveur demande le prochain coup
