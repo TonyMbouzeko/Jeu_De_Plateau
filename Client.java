@@ -123,4 +123,16 @@ class Client {
 		return boardValues;
 	}
 
+	private static String formatMoveToServer(Move m) {
+    char colDep = (char) ('A' + m.getColDepart());
+    char colArr = (char) ('A' + m.getColArrive());
+
+    
+    int ligDep = 13 - m.getRowDepart();
+    int ligArr = 13 - m.getRowArrive();
+
+    // Format attendu par le serveur : A13-B13
+    return "" + colDep + ligDep + "-" + colArr + ligArr;
+}
+
 }
