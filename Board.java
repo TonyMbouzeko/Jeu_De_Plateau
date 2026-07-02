@@ -12,7 +12,7 @@ class Board {
     private Mark currentPlayer;
 
     // Ne pas changer la signature de cette méthode
-    public Board()throws IOException {
+    public Board() {
         board = new Mark[13][13];
     }
 
@@ -25,6 +25,7 @@ class Board {
     }
 
     // Place la pièce 'mark' sur le plateau, à la
+    
     // position spécifiée dans Move
     //
     // Ne pas changer la signature de cette méthode
@@ -59,31 +60,25 @@ class Board {
     //           0   pour un match nul
     // Ne pas changer la signature de cette méthode
     public int evaluate(Mark mark) {
-        Mark adversaire;
-        if (mark == Mark.ROUGE) {
-            adversaire = Mark.NOIR;
-        } else {
-            adversaire = Mark.ROUGE;
-        }
-        for (int i = 0; i < 13; i++) {
-            if ((board[i][0] == mark && board[i][1] == mark && board[i][2] == mark) ||
-                    (board[0][i] == mark && board[1][i] == mark && board[2][i] == mark) ||
-                    (board[0][0] == mark && board[1][1] == mark && board[2][2] == mark)) {
+        if (roiAuCoin()){
+            if (mark == Mark.NOIR){
                 return 100;
-            } else if ((board[i][0] == adversaire && board[i][1] == adversaire && board[i][2] == adversaire) ||
-                    (board[0][i] == adversaire && board[1][i] == adversaire && board[2][i] == adversaire) ||
-                    (board[0][0] == adversaire && board[1][1] == adversaire && board[2][2] == adversaire)) {
+            }else{
                 return -100;
             }
-
-            if (board[0][2] == mark && board[1][1] == mark && board[2][0] == mark) {
+        }else if (!roiSurPlateau()){
+            if (mark == Mark.ROUGE){
                 return 100;
-            }
-            if (board[0][2] == adversaire && board[1][1] == adversaire && board[2][0] == adversaire) {
+            }else{
                 return -100;
             }
-
         }
+        List<Move> coups = coupsPossibles(mark);
+
+        if (!coups.isEmpty()){
+            return 0;
+        }
+
         return 0;
     }
 
@@ -163,6 +158,24 @@ class Board {
 
         default:
             throw new IllegalArgumentException("Valeur inconnue : " + valeur);
+        }
     }
-}
+
+    public boolean roiAuCoin(){
+         if (board[0][0] == Mark.ROI || board[0][12] == Mark.ROI || board[12][12]== Mark.ROI || board[12][0] == Mark.ROI ){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean roiSurPlateau(){
+        for (int i =0; i< board.length; i++){
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == Mark.ROI){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

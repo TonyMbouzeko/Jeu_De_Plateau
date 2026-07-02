@@ -15,12 +15,16 @@ class Client {
 
 	public static void main(String[] args) {
 
+		
+		int[][] board = new int[13][13];
+
 		try {
 			Client client = new Client();
 			Board b = new Board();
 			BufferedInputStream input = client.input;
 			BufferedOutputStream output = client.output;
 			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+			
 			while (1 == 1) {
 				char cmd = 0;
 				cmd = (char) input.read();
@@ -29,7 +33,6 @@ class Client {
 				if (cmd == '1') {
 					b.SetCurrentPlayer(Mark.ROUGE);
 					byte[] aBuffer = new byte[1024];
-
 					int size = input.available();
 					// System.out.println("size " + size);
 					input.read(aBuffer, 0, size);
