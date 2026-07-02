@@ -4,6 +4,17 @@ import java.util.List;
 
     private static final int MAX_DEPTH = 2; 
 
+    Move jouer(Board board, Mark maCouleur) {
+    List<Move> coups = board.coupsPossibles(maCouleur);
+
+    if (coups.isEmpty()) {
+        return null;
+    }
+
+    int index = (int) (Math.random() * coups.size());
+    return coups.get(index);
+}
+
      Move getBestMove(Board board, Mark maCouleur) {
         List<Move> coups = board.coupsPossibles();
         if (coups.isEmpty()) return null;

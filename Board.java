@@ -32,8 +32,9 @@ class Board {
 
     // La case de départ est vide après le coup et la case d'arrivée contient la pièce.
     public void play(Move m, Mark mark) {
-        board[m.getRowDepart()][m.getColDepart()] = mark.EMPTY;
-        board[m.getRowArrive()][m.getColArrive()] = mark;
+        Mark pion = board[m.getRowDepart()][m.getColDepart()];
+        board[m.getRowDepart()][m.getColDepart()] = Mark.EMPTY;
+        board[m.getRowArrive()][m.getColArrive()] = pion;
     }
 
     // Vérifie si la pièce 'mark' appartient à un certains camp (ROUGE ou NOIR)
@@ -42,9 +43,9 @@ class Board {
             return false;
         }
         if(camp == Mark.NOIR) {
-            return mark == Mark.NOIR;
+            return mark == Mark.NOIR || mark == Mark.ROI;
         } 
-        return mark == Mark.ROUGE || mark == Mark.ROI;
+        return mark == Mark.ROUGE;
     }
 
     //vérifie si une case de cordonnées (r, c) est une case fermée.
