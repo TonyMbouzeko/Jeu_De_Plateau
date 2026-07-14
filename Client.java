@@ -66,14 +66,9 @@ class Client {
 
                     b.SetCurrentPlayer(Mark.ROUGE);
 
-                    String s =
-                        lireMessageDisponible(input, 1024);
+                    String[] boardValues = lirePlateauExactement(input);
 
-                    System.out.println("Plateau reçu :");
-                    System.out.println(s);
-
-                    String[] boardValues =
-                        s.trim().split("\\s+");
+                    System.out.println("Plateau reçu : 169 valeurs.");
 
                     if (boardValues.length != 169) {
                         System.out.println(
@@ -127,14 +122,9 @@ class Client {
 
                     b.SetCurrentPlayer(Mark.NOIR);
 
-                    String s =
-                        lireMessageDisponible(input, 1024);
+                    String[] boardValues = lirePlateauExactement(input);
 
-                    System.out.println("Plateau reçu :");
-                    System.out.println(s);
-
-                    String[] boardValues =
-                        s.trim().split("\\s+");
+                    System.out.println("Plateau reçu : 169 valeurs.");
 
                     if (boardValues.length != 169) {
                         System.out.println(
@@ -153,7 +143,6 @@ class Client {
 
                 }
 
-    
                 if (cmd == '3') {
 
                     if (dernierCoupEnvoye != null) {
@@ -163,10 +152,9 @@ class Client {
                         dernierCoupEnvoyeServeur = null;
                     }
 
-                
                     coupsInvalide = 0;
 
-                    String s =lireMessageDisponible(input, 16);
+                    String s = lireCoupServeur(input);
                     System.out.println("Dernier coup adverse reçu : ["+ s+ "]");
 
                     Move coupAdverse =
@@ -185,7 +173,6 @@ class Client {
                         adversaire = Mark.NOIR;
                     }
 
-        
                     b.play(coupAdverse, adversaire);
 
                     System.out.println(
@@ -228,7 +215,6 @@ class Client {
                     envoyerCoup(output, move);
                 }
 
-                
                 if (cmd == '4') {
 
                     coupsInvalide++;
@@ -278,8 +264,7 @@ class Client {
 
                 if (cmd == '5') {
 
-                    String s =
-                        lireMessageDisponible(input, 16);
+                    String s = lireCoupServeur(input);
 
                     System.out.println(
                         "Partie terminée. "
@@ -313,6 +298,100 @@ class Client {
             );
 
             e.printStackTrace();
+        }
+    }
+
+    private static String[] lirePlateauExactement(
+        BufferedInputStream input
+    ) throws IOException {
+
+        String[] valeurs = new String[169];
+        int index = 0;
+        StringBuilder token = new StringBuilder();
+
+        while (index < 169) {
+            int lu = input.read();
+
+            if (lu == -1) {
+                throw new EOFException(
+                    "Connexion fermée pendant la lecture du plateau."
+                );
+            }
+
+            char c = (char) lu;
+
+            if (Character.isWhitespace(c)) {
+                if (token.length() > 0) {
+                    valeurs[index++] = token.toString();
+                    token.setLength(0);
+                }
+            } else {
+                token.append(c);
+            }
+        }
+
+        return valeurs;
+    }
+
+    private static String lireCoupServeur(
+        BufferedInputStream input
+    ) throws IOException {
+
+        final long delaiMaxMs = 1000;
+        final long silenceFinMs = 15;
+        final int tailleMax = 16;
+
+        long debut = System.currentTimeMillis();
+
+        while (input.available() == 0) {
+            if (System.currentTimeMillis() - debut >= delaiMaxMs) {
+                throw new IOException(
+                    "Aucun coup reçu après la commande du serveur."
+                );
+            }
+
+            dormirLecture();
+        }
+
+        ByteArrayOutputStream message = new ByteArrayOutputStream();
+        long derniereDonnee = System.currentTimeMillis();
+
+        while (message.size() < tailleMax) {
+            while (input.available() > 0 && message.size() < tailleMax) {
+                int lu = input.read();
+
+                if (lu == -1) {
+                    throw new EOFException(
+                        "Connexion fermée pendant la lecture d'un coup."
+                    );
+                }
+
+                message.write(lu);
+                derniereDonnee = System.currentTimeMillis();
+            }
+
+            if (System.currentTimeMillis() - derniereDonnee >= silenceFinMs) {
+                break;
+            }
+
+            dormirLecture();
+        }
+
+        String coup = message.toString(StandardCharsets.US_ASCII).trim();
+
+        if (coup.isEmpty()) {
+            throw new IOException("Le coup reçu est vide.");
+        }
+
+        return coup;
+    }
+
+    private static void dormirLecture() throws IOException {
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Lecture interrompue.", e);
         }
     }
 
@@ -377,7 +456,6 @@ class Client {
             StandardCharsets.US_ASCII
         ).trim();
     }
-
 
     private static void envoyerCoup(
         BufferedOutputStream output,
@@ -515,7 +593,6 @@ class Client {
         }
     }
 
- 
     public String[] boardValues()
         throws IOException {
 
