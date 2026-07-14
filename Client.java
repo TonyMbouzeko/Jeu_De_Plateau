@@ -185,11 +185,7 @@ class Client {
 
                     long fin = System.currentTimeMillis();
 
-                    System.out.println(
-                        "Temps de calcul de l'IA : "
-                        + (fin - debut)
-                        + " ms"
-                    );
+                    System.out.println("Temps de calcul de l'IA : "+ (fin - debut)+ " ms");
 
                     if (mouvement == null) {
                         System.out.println(
