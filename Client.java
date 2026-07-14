@@ -20,7 +20,6 @@ class Client {
 
         Move dernierCoupEnvoye = null;
         String dernierCoupEnvoyeServeur = null;
-
         boolean partieTerminee = false;
 
         try {
@@ -150,10 +149,7 @@ class Client {
 
                     b.loadFromServer(boardValues);
 
-                    System.out.println(
-                        "Nouvelle partie! Vous jouez noir. "
-                        + "Attendez le premier coup des rouges."
-                    );
+                    System.out.println("Nouvelle partie! Vous jouez noir. "+ "Attendez le premier coup des rouges.");
 
                 }
 
@@ -161,17 +157,8 @@ class Client {
                 if (cmd == '3') {
 
                     if (dernierCoupEnvoye != null) {
-
-                        b.play(
-                            dernierCoupEnvoye,
-                            b.GetCurrentPlayer()
-                        );
-
-                        System.out.println(
-                            "Notre coup précédent a été accepté : "
-                            + dernierCoupEnvoyeServeur
-                        );
-
+                        b.play(dernierCoupEnvoye,b.GetCurrentPlayer());
+                        System.out.println("Notre coup précédent a été accepté : "+ dernierCoupEnvoyeServeur);
                         dernierCoupEnvoye = null;
                         dernierCoupEnvoyeServeur = null;
                     }
@@ -179,23 +166,14 @@ class Client {
                 
                     coupsInvalide = 0;
 
-                    String s =
-                        lireMessageDisponible(input, 16);
-
-                    System.out.println(
-                        "Dernier coup adverse reçu : ["
-                        + s
-                        + "]"
-                    );
+                    String s =lireMessageDisponible(input, 16);
+                    System.out.println("Dernier coup adverse reçu : ["+ s+ "]");
 
                     Move coupAdverse =
                         formatServerToMove(s);
 
                     if (coupAdverse == null) {
-                        System.out.println(
-                            "Impossible de convertir le coup adverse."
-                        );
-
+                        System.out.println("Impossible de convertir le coup adverse.");
                         break;
                     }
 
@@ -214,17 +192,11 @@ class Client {
                         "Calcul du prochain coup..."
                     );
 
-                    long debut =
-                        System.currentTimeMillis();
+                    long debut = System.currentTimeMillis();
 
-                    Move mouvement =
-                        iA.jouer(
-                            b,
-                            b.GetCurrentPlayer()
-                        );
+                    Move mouvement = iA.jouer(b,b.GetCurrentPlayer());
 
-                    long fin =
-                        System.currentTimeMillis();
+                    long fin = System.currentTimeMillis();
 
                     System.out.println(
                         "Temps de calcul de l'IA : "
