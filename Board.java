@@ -117,6 +117,21 @@ class Board {
 
         scoreRouge -= scoreDistanceRoi;
 
+        if ( cheminLibreRoi(ligneRoi, colonneRoi)){
+            scoreRouge -=600;
+        }
+
+        int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
+
+        if (ennemiRoi == 1){
+            scoreRouge +=30;
+        }else if (ennemiRoi ==2){
+            scoreRouge += 100;
+        }else if (ennemiRoi ==3){
+            scoreRouge += 300;
+        }else if (ennemiRoi ==4){
+            scoreRouge += 600;
+        }
         // -----------------------------------------------------------------------------------------------------------
         if (mark == Mark.ROUGE){
             return scoreRouge;
@@ -126,7 +141,7 @@ class Board {
     }
 
 
-    
+
     public List<Move> coupsPossibles(Mark camp) {
         List<Move> moves = new ArrayList<>();
         int n = board.length;
@@ -211,10 +226,7 @@ class Board {
     }
 
     public boolean roiAuCoin() {
-        return board[0][0] == Mark.ROI
-                || board[0][12] == Mark.ROI
-                || board[12][12] == Mark.ROI
-                || board[12][0] == Mark.ROI;
+        return board[0][0] == Mark.ROI || board[0][12] == Mark.ROI || board[12][12] == Mark.ROI || board[12][0] == Mark.ROI;
     }
 
     public boolean roiSurPlateau() {
@@ -279,4 +291,86 @@ class Board {
 
         return Math.min(Math.min(distanceHautGauche, distanceHautDroite), Math.min(distanceBasGauche, distanceBasDroite));
     }
+
+    public boolean cheminLibreVersCoin(int ligneRoi, int colonneRoi, int ligneCoin, int colonneCoin) {
+
+        if (ligneRoi != ligneCoin && colonneRoi != colonneCoin) {
+            return false;
+        }
+        int directionLigne = Integer.compare(ligneCoin, ligneRoi);
+        int directionColonne = Integer.compare(colonneCoin, colonneRoi);
+
+        int ligne = ligneRoi + directionLigne;
+        int colonne = colonneRoi + directionColonne;
+
+        while (ligne != ligneCoin || colonne != colonneCoin) {
+            if (board[ligne][colonne] != Mark.EMPTY) {
+                return false;
+            }
+
+            ligne += directionLigne;
+            colonne += directionColonne;
+        }
+
+        return board[ligneCoin][colonneCoin] == Mark.EMPTY;
+    }
+
+    public boolean cheminLibreRoi(int ligneRoi, int colonneRoi) {
+    int derniereCase = board.length - 1;
+    return cheminLibreVersCoin(ligneRoi, colonneRoi, 0, 0) || cheminLibreVersCoin( ligneRoi,colonneRoi, 0,derniereCase)
+                || cheminLibreVersCoin(
+                    ligneRoi,
+                    colonneRoi,
+                    derniereCase,
+                    0
+            )
+            || cheminLibreVersCoin(
+                    ligneRoi,
+                    colonneRoi,
+                    derniereCase,
+                    derniereCase
+            );
+    }
+
+    public int rougesAutourDuRoi(int ligneRoi, int colonneRoi) {
+        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
+        int compteur = 0;
+        for (int[] direction : directions) {
+            int ligneVoisine = ligneRoi + direction[0];
+            int colonneVoisine = colonneRoi + direction[1];
+
+            if (!estDansPlateau(ligneVoisine, colonneVoisine)) {
+                continue;
+            }
+
+            if (board[ligneVoisine][colonneVoisine] == Mark.ROUGE) {
+                compteur++;
+            }
+        }
+
+        return compteur;
+    }
+
+    public int mobiliteRoi(int ligneRoi, int colonneRoi) {
+    int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
+    int compteur = 0;
+    for (int[] direction : directions) {
+        int ligne = ligneRoi + direction[0];
+        int colonne = colonneRoi + direction[1];
+
+        while (estDansPlateau(ligne, colonne)
+                && board[ligne][colonne] == Mark.EMPTY) {
+
+            compteur++;
+
+            ligne += direction[0];
+            colonne += direction[1];
+        }
+    }
+
+    return compteur;
+}
+
+
+
 }
