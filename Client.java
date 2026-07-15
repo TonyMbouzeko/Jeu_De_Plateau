@@ -68,16 +68,10 @@ class Client {
 
                     String[] boardValues = lirePlateauExactement(input);
 
-                    System.out.println("Plateau reçu : 169 valeurs.");
+                    //System.out.println("Plateau reçu : 169 valeurs.");
 
                     if (boardValues.length != 169) {
-                        System.out.println(
-                            "Erreur : 169 valeurs étaient attendues, "
-                            + "mais "
-                            + boardValues.length
-                            + " ont été reçues."
-                        );
-
+                        System.out.println("Erreur : 169 valeurs étaient attendues, "+ "mais "+ boardValues.length+ " ont été reçues.");
                         break;
                     }
 
@@ -86,18 +80,11 @@ class Client {
                     System.out.println(
                         "Nouvelle partie! Vous jouez rouge."
                     );
-
                     Move mouvement =
-                        iA.jouer(
-                            b,
-                            b.GetCurrentPlayer()
-                        );
+                        iA.jouer(b,b.GetCurrentPlayer());
 
                     if (mouvement == null) {
-                        System.out.println(
-                            "Aucun coup possible."
-                        );
-
+                        System.out.println(  "Aucun coup possible.");
                         break;
                     }
 
@@ -603,9 +590,6 @@ class Client {
             .split("\\s+");
     }
 
-    /*
-     * Ferme proprement les flux et le socket.
-     */
     public void fermer() {
 
         try {

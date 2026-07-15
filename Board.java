@@ -75,17 +75,58 @@ class Board {
 
     // Ne pas changer la signature de cette méthode.
     public int evaluate(Mark mark) {
+
         if (roiAuCoin()) {
-            return mark == Mark.NOIR ? 100 : -100;
+            if( mark == Mark.NOIR){
+                return 100000;
+            }else{
+                return -100000;
+            }
         }
 
         if (!roiSurPlateau()) {
-            return mark == Mark.ROUGE ? 100 : -100;
+            if (mark == Mark.ROUGE){
+                return 100000;
+            }else{
+                return -100000;
+            }
         }
 
-        return 0;
+        // --------------------- Nombre de pièces sur le terrain et distance par rapport au coin venant du roi ------------------------------------------------
+        int nombreNoirs =0;
+        int nombreRouges =0;
+
+        int ligneRoi = -1;
+        int colonneRoi = -1;
+        
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == Mark.ROUGE) {
+                    nombreRouges++;
+                } else if (board[i][j] == Mark.NOIR) {
+                    nombreNoirs++;
+                } else if(board[i][j] == Mark.ROI){
+                    ligneRoi = i;
+                    colonneRoi = j;
+                }
+            }
+        }
+        int scoreRouge = nombreRouges - nombreNoirs;
+        int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
+        int scoreDistanceRoi = (12 - distanceCoin)*5;
+
+        scoreRouge -= scoreDistanceRoi;
+
+        // -----------------------------------------------------------------------------------------------------------
+        if (mark == Mark.ROUGE){
+            return scoreRouge;
+        }else{
+            return -scoreRouge;
+        }
     }
 
+
+    
     public List<Move> coupsPossibles(Mark camp) {
         List<Move> moves = new ArrayList<>();
         int n = board.length;
@@ -188,7 +229,7 @@ class Board {
         return false;
     }
 
-    private void appliquerCaptures(int ligne, int colonne, Mark camp) {
+    public void appliquerCaptures(int ligne, int colonne, Mark camp) {
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
         for (int[] direction : directions) {
@@ -224,10 +265,18 @@ class Board {
         }
     }
 
-    private boolean estDansPlateau(int ligne, int colonne) {
-        return ligne >= 0
-                && ligne < board.length
-                && colonne >= 0
-                && colonne < board.length;
+    public boolean estDansPlateau(int ligne, int colonne) {
+        return ligne >= 0 && ligne < board.length && colonne >= 0 && colonne < board.length;
+    }
+
+    public int distanceCoinPlusProche(int ligneRoi, int colonneRoi) {
+        
+        int distanceHautGauche = Math.abs(ligneRoi)+ Math.abs(colonneRoi);
+        int distanceHautDroite = Math.abs(ligneRoi)+ Math.abs(colonneRoi - 12);
+
+        int distanceBasGauche = Math.abs(ligneRoi - 12) + Math.abs(colonneRoi);
+        int distanceBasDroite = Math.abs(ligneRoi - 12) + Math.abs(colonneRoi - 12);
+
+        return Math.min(Math.min(distanceHautGauche, distanceHautDroite), Math.min(distanceBasGauche, distanceBasDroite));
     }
 }
