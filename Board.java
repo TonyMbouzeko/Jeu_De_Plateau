@@ -216,9 +216,7 @@ class Board {
         return moves;
     }
 
-    public List<Move> coupsPossibles() {
-        return coupsPossibles(currentPlayer);
-    }
+
 
     public boolean estfini() {
         return roiAuCoin() || !roiSurPlateau();
@@ -494,7 +492,3 @@ class Board {
 
 
 }
-
-
-
-
