@@ -29,16 +29,16 @@ class Board {
                 this.board[i][j] = autreboard.board[i][j];
             }
         }
-        this.currentPlayer = autreboard.GetCurrentPlayer();
+        this.currentPlayer = autreboard.getCurrentPlayer();
     }
 
     // --------------------------------------------------------------
 
-    public void SetCurrentPlayer(Mark player) {
+    public void setCurrentPlayer(Mark player) {
         this.currentPlayer = player;
     }
 
-    public Mark GetCurrentPlayer() {
+    public Mark getCurrentPlayer() {
         return this.currentPlayer;
     }
 
@@ -62,6 +62,17 @@ class Board {
 
         if (pion == null || pion == Mark.EMPTY) {
             throw new IllegalArgumentException("Aucune pièce sur la case de départ.");
+        }
+        if (!belongsTo(pion, mark)) {
+            throw new IllegalArgumentException("La pièce déplacée n'appartient pas au camp " + mark);
+        }
+
+        if (board[ligneArrivee][colonneArrivee] != Mark.EMPTY) {
+            throw new IllegalArgumentException("La case d'arrivée n'est pas vide.");
+        }
+
+        if(!mouvementValide(m, pion)){
+            throw new IllegalArgumentException("Le mouvement est invalide");
         }
 
         board[ligneDepart][colonneDepart] = Mark.EMPTY;
@@ -370,25 +381,74 @@ class Board {
     }
 
     public int mobiliteRoi(int ligneRoi, int colonneRoi) {
-    int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
-    int compteur = 0;
-    for (int[] direction : directions) {
-        int ligne = ligneRoi + direction[0];
-        int colonne = colonneRoi + direction[1];
+        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
+        int compteur = 0;
+        for (int[] direction : directions) {
+            int ligne = ligneRoi + direction[0];
+            int colonne = colonneRoi + direction[1];
 
-        while (estDansPlateau(ligne, colonne)
-                && board[ligne][colonne] == Mark.EMPTY) {
+            while (estDansPlateau(ligne, colonne) && board[ligne][colonne] == Mark.EMPTY) {
 
-            compteur++;
+                compteur++;
 
-            ligne += direction[0];
-            colonne += direction[1];
+                ligne += direction[0];
+                colonne += direction[1];
+            }
         }
+
+        return compteur;
     }
+    
 
-    return compteur;
+    public boolean mouvementValide(Move m, Mark pion) {
+        int ligneDepart = m.getRowDepart();
+        int colonneDepart = m.getColDepart();
+        int ligneArrivee = m.getRowArrive();
+        int colonneArrivee = m.getColArrive();
+
+    
+        if (ligneDepart == ligneArrivee
+            && colonneDepart == colonneArrivee) {
+            return false;
+        }
+
+   
+        if (ligneDepart != ligneArrivee && colonneDepart != colonneArrivee) {
+            return false;
+        }
+
+    
+        if (isClosedBox(ligneArrivee, colonneArrivee) && pion != Mark.ROI) {
+            return false;
+        }
+
+        int directionLigne = Integer.compare(ligneArrivee, ligneDepart);
+
+        int directionColonne = Integer.compare(colonneArrivee, colonneDepart);
+
+        int ligne = ligneDepart + directionLigne;
+        int colonne = colonneDepart + directionColonne;
+
+    
+        while (ligne != ligneArrivee || colonne != colonneArrivee) {
+
+            if (board[ligne][colonne] != Mark.EMPTY) {
+                return false;
+            }
+
+        
+            if (isClosedBox(ligne, colonne) && pion != Mark.ROI) {
+                return false;
+            }
+
+            ligne += directionLigne;
+            colonne += directionColonne;
+        }
+
+        return true;
+    }
 }
 
 
 
-}
+

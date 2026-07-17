@@ -64,7 +64,7 @@ class Client {
                     dernierCoupEnvoye = null;
                     dernierCoupEnvoyeServeur = null;
 
-                    b.SetCurrentPlayer(Mark.ROUGE);
+                    b.setCurrentPlayer(Mark.ROUGE);
 
                     String[] boardValues = lirePlateauExactement(input);
 
@@ -81,7 +81,7 @@ class Client {
                         "Nouvelle partie! Vous jouez rouge."
                     );
                     Move mouvement =
-                        iA.jouer(b,b.GetCurrentPlayer());
+                        iA.jouer(b,b.getCurrentPlayer());
 
                     if (mouvement == null) {
                         System.out.println(  "Aucun coup possible.");
@@ -107,20 +107,14 @@ class Client {
                     dernierCoupEnvoye = null;
                     dernierCoupEnvoyeServeur = null;
 
-                    b.SetCurrentPlayer(Mark.NOIR);
+                    b.setCurrentPlayer(Mark.NOIR);
 
                     String[] boardValues = lirePlateauExactement(input);
 
                     System.out.println("Plateau reçu : 169 valeurs.");
 
                     if (boardValues.length != 169) {
-                        System.out.println(
-                            "Erreur : 169 valeurs étaient attendues, "
-                            + "mais "
-                            + boardValues.length
-                            + " ont été reçues."
-                        );
-
+                        System.out.println("Erreur : 169 valeurs étaient attendues, " + "mais " + boardValues.length + " ont été reçues.");
                         break;
                     }
 
@@ -133,7 +127,7 @@ class Client {
                 if (cmd == '3') {
 
                     if (dernierCoupEnvoye != null) {
-                        b.play(dernierCoupEnvoye,b.GetCurrentPlayer());
+                        b.play(dernierCoupEnvoye,b.getCurrentPlayer());
                         System.out.println("Notre coup précédent a été accepté : "+ dernierCoupEnvoyeServeur);
                         dernierCoupEnvoye = null;
                         dernierCoupEnvoyeServeur = null;
@@ -154,7 +148,7 @@ class Client {
 
                     Mark adversaire;
 
-                    if (b.GetCurrentPlayer() == Mark.NOIR) {
+                    if (b.getCurrentPlayer() == Mark.NOIR) {
                         adversaire = Mark.ROUGE;
                     } else {
                         adversaire = Mark.NOIR;
@@ -168,7 +162,7 @@ class Client {
 
                     long debut = System.currentTimeMillis();
 
-                    Move mouvement = iA.jouer(b,b.GetCurrentPlayer());
+                    Move mouvement = iA.jouer(b,b.getCurrentPlayer());
 
                     long fin = System.currentTimeMillis();
 
@@ -191,9 +185,7 @@ class Client {
                     dernierCoupEnvoye = mouvement;
                     dernierCoupEnvoyeServeur = move;
 
-                    System.out.println(
-                        "Coup envoyé au serveur : " + move
-                    );
+                    System.out.println("Coup envoyé au serveur : " + move);
 
                     envoyerCoup(output, move);
                 }
@@ -221,7 +213,7 @@ class Client {
                     Move mouvement =
                         iA.jouer(
                             b,
-                            b.GetCurrentPlayer()
+                            b.getCurrentPlayer()
                         );
 
                     if (mouvement == null) {
