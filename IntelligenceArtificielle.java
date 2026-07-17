@@ -2,7 +2,9 @@ import java.util.List;
 
  class IntelligenceArtificielle {
 
-    private static final int MAX_profondeur = 2; 
+    //private static final int MAX_profondeur = 2;
+    private long debut;
+    private static final long LIMITE_TEMPS = 4900;
 
    /*  Move jouer(Board board, Mark maCouleur) {
     List<Move> coups = board.coupsPossibles(maCouleur);
@@ -16,8 +18,14 @@ import java.util.List;
 }*/
 
      Move getBestMove(Board board, Mark maCouleur, int profondeur) {
+
+        if(profondeur <= 0){
+            throw new IllegalArgumentException("La profondeur doit être strictement supérieure à 0.");
+        }
+
+        debut = System.currentTimeMillis();
         List<Move> coups = board.coupsPossibles(maCouleur);
-        
+
         if (coups.isEmpty()) return null;
 
         Move meilleurCoup = coups.get(0);
@@ -27,10 +35,15 @@ import java.util.List;
         int beta = Integer.MAX_VALUE;
 
         for (Move coup : coups) {
-            Mark ancienEtatCible = Mark.EMPTY; 
-            board.play(coup, maCouleur);
-            int score = alphaBeta(board, MAX_profondeur - 1, alpha, beta, false, maCouleur);
-            board.play(coup, ancienEtatCible);
+
+            if(temps()){
+                break;
+            }
+
+            Board copie = new Board(board);
+            copie.play(coup, maCouleur);
+
+            int score = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
 
             if (score > meilleurScore) {
                 meilleurScore = score;
@@ -43,7 +56,8 @@ import java.util.List;
     }
 
     public int alphaBeta(Board board, int profondeur, int alpha, int beta, boolean isMax, Mark maCouleur) {
-        if (profondeur == 0 || board.estfini()) {
+       
+        if (profondeur == 0 || board.estfini()|| temps()) {
             return board.evaluate(maCouleur);
         }
 
@@ -62,6 +76,11 @@ import java.util.List;
             int maxEval = Integer.MIN_VALUE;
 
             for (Move coup : coups) {
+                
+                if(temps()){
+                    break;
+                }
+            
 
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
@@ -80,6 +99,11 @@ import java.util.List;
             int minEval = Integer.MAX_VALUE;
 
             for (Move coup : coups) {
+                
+                if(temps()){
+                    break;
+                }
+            
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
 
@@ -93,5 +117,9 @@ import java.util.List;
             }
             return minEval;
         }
+    }
+
+    public boolean temps(){
+        return System.currentTimeMillis() - debut >= LIMITE_TEMPS;
     }
 }
