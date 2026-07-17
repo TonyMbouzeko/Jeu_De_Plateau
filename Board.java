@@ -297,13 +297,50 @@ class Board {
             }
 
             Mark pieceAppui = board[ligneAppui][colonneAppui];
-            boolean capture = belongsTo(pieceAppui, camp)
-                    || isClosedBox(ligneAppui, colonneAppui);
+            boolean capture = belongsTo(pieceAppui, camp) || isClosedBox(ligneAppui, colonneAppui);
 
             if (capture) {
                 board[ligneEnnemi][colonneEnnemi] = Mark.EMPTY;
             }
+
+            if (camp == Mark.ROUGE){
+                appliquerCaptureRoi();
+            }
         }
+    }
+
+    public void appliquerCaptureRoi(){
+        int ligneRoi = -1;
+        int colonneRoi = -1;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == Mark.ROI){
+                    ligneRoi = i;
+                    colonneRoi =j;
+                    break;
+                }
+            }
+            if (ligneRoi != -1){
+            break;
+            }
+
+            if (ligneRoi == -1){
+                return;
+            }
+            if(roiAuCoin()){
+                return;
+            }
+            boolean haut = cotedangereuxRoi(ligneRoi-1, colonneRoi);
+            boolean bas = cotedangereuxRoi(ligneRoi+1, colonneRoi);
+            boolean droite = cotedangereuxRoi(ligneRoi, colonneRoi+1);
+            boolean gauche = cotedangereuxRoi(ligneRoi, colonneRoi-1);
+
+            if (haut && bas && gauche && droite){
+                board[ligneRoi][colonneRoi] = Mark.EMPTY;
+            }
+        }
+       
     }
 
     public boolean estDansPlateau(int ligne, int colonne) {
@@ -398,7 +435,6 @@ class Board {
 
         return compteur;
     }
-    
 
     public boolean mouvementValide(Move m, Mark pion) {
         int ligneDepart = m.getRowDepart();
@@ -447,6 +483,16 @@ class Board {
 
         return true;
     }
+
+    public boolean cotedangereuxRoi(int ligne, int colonne){
+        if (!estDansPlateau(ligne, colonne)){
+            return false;
+        }
+
+        return board[ligne][colonne] ==  Mark.ROUGE || isClosedBox(ligne, colonne);
+    }
+
+
 }
 
 
