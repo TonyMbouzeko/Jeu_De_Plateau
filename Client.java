@@ -589,7 +589,7 @@ class Client {
             .trim()
             .split("\\s+");
     }
-
+	
     public void fermer() {
 
         try {

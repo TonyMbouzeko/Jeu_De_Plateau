@@ -17,6 +17,23 @@ class Board {
         }
     }
 
+    // Constructeur qui va faire une copie profonde d'un autre Board
+    
+    public Board(Board autreboard){
+        this.board = new Mark[autreboard.board.length][];
+
+        for (int i = 0; i < this.board.length; i++) {
+            this.board[i] = new Mark[autreboard.board[i].length];
+        
+            for (int j = 0; j < board[i].length; j++) {
+                this.board[i][j] = autreboard.board[i][j];
+            }
+        }
+        this.currentPlayer = autreboard.GetCurrentPlayer();
+    }
+
+    // --------------------------------------------------------------
+
     public void SetCurrentPlayer(Mark player) {
         this.currentPlayer = player;
     }
@@ -111,7 +128,7 @@ class Board {
                 }
             }
         }
-        int scoreRouge = nombreRouges - nombreNoirs;
+        int scoreRouge = (nombreRouges - nombreNoirs)*3;
         int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
         int scoreDistanceRoi = (12 - distanceCoin)*5;
 
@@ -132,6 +149,10 @@ class Board {
         }else if (ennemiRoi ==4){
             scoreRouge += 600;
         }
+
+        int roimobile = mobiliteRoi(ligneRoi, colonneRoi)*2;
+
+        scoreRouge -= roimobile;
         // -----------------------------------------------------------------------------------------------------------
         if (mark == Mark.ROUGE){
             return scoreRouge;
@@ -256,10 +277,7 @@ class Board {
 
             Mark pieceEnnemie = board[ligneEnnemi][colonneEnnemi];
 
-            if (pieceEnnemie == null
-                    || pieceEnnemie == Mark.EMPTY
-                    || belongsTo(pieceEnnemie, camp)
-                    || pieceEnnemie == Mark.ROI) {
+            if (pieceEnnemie == null || pieceEnnemie == Mark.EMPTY || belongsTo(pieceEnnemie, camp) || pieceEnnemie == Mark.ROI) {
                 continue;
             }
 
