@@ -1,8 +1,12 @@
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 class Client {
+
+    private static final int PROFONDEUR_IA = 2;
 
     Socket MyClient;
     BufferedInputStream input;
@@ -16,7 +20,7 @@ class Client {
 
     public static void main(String[] args) {
 
-        int coupsInvalide = 0;
+        List<String> coupsRefusesCeTour = new ArrayList<>();
 
         Move dernierCoupEnvoye = null;
         String dernierCoupEnvoyeServeur = null;
@@ -60,7 +64,7 @@ class Client {
                 if (cmd == '1') {
 
                     partieTerminee = false;
-                    coupsInvalide = 0;
+                    coupsRefusesCeTour.clear();
                     dernierCoupEnvoye = null;
                     dernierCoupEnvoyeServeur = null;
 
@@ -80,8 +84,11 @@ class Client {
                     System.out.println(
                         "Nouvelle partie! Vous jouez rouge."
                     );
-                    Move mouvement =
-                        iA.jouer(b,b.getCurrentPlayer());
+                    Move mouvement = calculerCoup(
+                        iA,
+                        b,
+                        b.getCurrentPlayer()
+                    );
 
                     if (mouvement == null) {
                         System.out.println(  "Aucun coup possible.");
@@ -103,7 +110,7 @@ class Client {
                 if (cmd == '2') {
 
                     partieTerminee = false;
-                    coupsInvalide = 0;
+                    coupsRefusesCeTour.clear();
                     dernierCoupEnvoye = null;
                     dernierCoupEnvoyeServeur = null;
 
@@ -133,7 +140,7 @@ class Client {
                         dernierCoupEnvoyeServeur = null;
                     }
 
-                    coupsInvalide = 0;
+                    coupsRefusesCeTour.clear();
 
                     String s = lireCoupServeur(input);
                     System.out.println("Dernier coup adverse reçu : ["+ s+ "]");
@@ -153,20 +160,18 @@ class Client {
                     } else {
                         adversaire = Mark.NOIR;
                     }
-
+                    b.afficherLigne(coupAdverse.getRowDepart());
                     b.play(coupAdverse, adversaire);
 
                     System.out.println(
                         "Calcul du prochain coup..."
                     );
 
-                    long debut = System.currentTimeMillis();
-
-                    Move mouvement = iA.jouer(b,b.getCurrentPlayer());
-
-                    long fin = System.currentTimeMillis();
-
-                    System.out.println("Temps de calcul de l'IA : "+ (fin - debut)+ " ms");
+                    Move mouvement = calculerCoup(
+                        iA,
+                        b,
+                        b.getCurrentPlayer()
+                    );
 
                     if (mouvement == null) {
                         System.out.println(
@@ -192,35 +197,44 @@ class Client {
 
                 if (cmd == '4') {
 
-                    coupsInvalide++;
-
                     System.out.println(
-                        "Coup invalide : "
+                        "Coup refusé par le serveur : "
                         + dernierCoupEnvoyeServeur
                     );
 
-                    dernierCoupEnvoye = null;
-                    dernierCoupEnvoyeServeur = null;
-
-                    if (coupsInvalide >= 7) {
-                        System.out.println(
-                            "Trop de coups invalides consécutifs."
+                    if (dernierCoupEnvoyeServeur != null) {
+                        coupsRefusesCeTour.add(
+                            dernierCoupEnvoyeServeur
                         );
-
-                        break;
                     }
 
-                    Move mouvement =
-                        iA.jouer(
-                            b,
+                    /*
+                     * Le plateau local n'a pas été modifié puisque notre
+                     * coup n'a pas été confirmé. On choisit donc rapidement
+                     * un autre coup légal qui n'a pas déjà été refusé.
+                     */
+                    List<Move> coupsPossibles =
+                        b.coupsPossibles(
                             b.getCurrentPlayer()
                         );
 
+                    Move mouvement = null;
+
+                    for (Move candidat : coupsPossibles) {
+                        String candidatServeur =
+                            formatMoveToServer(candidat);
+
+                        if (!coupsRefusesCeTour.contains(
+                                candidatServeur)) {
+                            mouvement = candidat;
+                            break;
+                        }
+                    }
+
                     if (mouvement == null) {
                         System.out.println(
-                            "Aucun autre coup possible."
+                            "Tous les coups générés localement ont été refusés."
                         );
-
                         break;
                     }
 
@@ -231,7 +245,8 @@ class Client {
                     dernierCoupEnvoyeServeur = move;
 
                     System.out.println(
-                        "Nouveau coup envoyé : " + move
+                        "Coup de secours envoyé immédiatement : "
+                        + move
                     );
 
                     envoyerCoup(output, move);
@@ -249,7 +264,7 @@ class Client {
 
                     partieTerminee = true;
 
-                    coupsInvalide = 0;
+                    coupsRefusesCeTour.clear();
                     dernierCoupEnvoye = null;
                     dernierCoupEnvoyeServeur = null;
                     continue;
@@ -274,6 +289,46 @@ class Client {
 
             e.printStackTrace();
         }
+    }
+
+
+    private static Move calculerCoup(
+        IntelligenceArtificielle ia,
+        Board board,
+        Mark couleur
+    ) {
+        long debutCalcul = System.nanoTime();
+
+        System.out.println(
+            "Début du calcul — couleur : "
+            + couleur
+            + ", profondeur : "
+            + PROFONDEUR_IA
+        );
+
+        Move mouvement = ia.getBestMove(
+            board,
+            couleur,
+            PROFONDEUR_IA
+        );
+
+        long dureeMs =
+            (System.nanoTime() - debutCalcul) / 1_000_000L;
+
+        System.out.println(
+            "Fin du calcul — durée : "
+            + dureeMs
+            + " ms"
+        );
+
+        if (mouvement != null) {
+            System.out.println(
+                "Coup calculé : "
+                + formatMoveToServer(mouvement)
+            );
+        }
+
+        return mouvement;
     }
 
     private static String[] lirePlateauExactement(

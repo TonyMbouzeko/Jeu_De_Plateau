@@ -71,6 +71,22 @@ class Board {
             throw new IllegalArgumentException("La case d'arrivée n'est pas vide.");
         }
 
+        System.out.println("Validation du coup : " + m.getRowDepart() + "," + m.getColDepart()  + " -> "  + m.getRowArrive() + "," + m.getColArrive());
+
+        System.out.println( "Camp qui joue : " + mark);
+
+        System.out.println( "Pièce au départ : " + pion);
+
+        System.out.println("Case d'arrivée : " + board[ligneArrivee][colonneArrivee]);
+
+        System.out.println("Validation du coup : " + m.getRowDepart() + "," + m.getColDepart()  + " -> "  + m.getRowArrive() + "," + m.getColArrive());
+
+        System.out.println( "Camp qui joue : " + mark);
+
+        System.out.println( "Pièce au départ : " + pion);
+
+        System.out.println("Case d'arrivée : " + board[ligneArrivee][colonneArrivee]);
+
         if(!mouvementValide(m, pion)){
             throw new IllegalArgumentException("Le mouvement est invalide");
         }
@@ -204,7 +220,7 @@ class Board {
                         }
 
                         if (isClosedBox(r, c) && piece != Mark.ROI) {
-                            break;
+                            continue;
                         }
 
                         moves.add(new Move(i, j, r, c));
@@ -301,10 +317,11 @@ class Board {
                 board[ligneEnnemi][colonneEnnemi] = Mark.EMPTY;
             }
 
-            if (camp == Mark.ROUGE){
+        }
+        
+        if (camp == Mark.ROUGE){
                 appliquerCaptureRoi();
             }
-        }
     }
 
     public void appliquerCaptureRoi(){
@@ -322,21 +339,22 @@ class Board {
             if (ligneRoi != -1){
             break;
             }
+        }
 
-            if (ligneRoi == -1){
-                return;
-            }
-            if(roiAuCoin()){
-                return;
-            }
-            boolean haut = cotedangereuxRoi(ligneRoi-1, colonneRoi);
-            boolean bas = cotedangereuxRoi(ligneRoi+1, colonneRoi);
-            boolean droite = cotedangereuxRoi(ligneRoi, colonneRoi+1);
-            boolean gauche = cotedangereuxRoi(ligneRoi, colonneRoi-1);
+        if (ligneRoi == -1){
+            return;
+        }
 
-            if (haut && bas && gauche && droite){
-                board[ligneRoi][colonneRoi] = Mark.EMPTY;
-            }
+        if(roiAuCoin()){
+            return;
+        }
+        boolean haut = cotedangereuxRoi(ligneRoi-1, colonneRoi);
+        boolean bas = cotedangereuxRoi(ligneRoi+1, colonneRoi);
+        boolean droite = cotedangereuxRoi(ligneRoi, colonneRoi+1);
+        boolean gauche = cotedangereuxRoi(ligneRoi, colonneRoi-1);
+
+        if (haut && bas && gauche && droite){
+            board[ligneRoi][colonneRoi] = Mark.EMPTY;
         }
        
     }
@@ -441,18 +459,23 @@ class Board {
         int colonneArrivee = m.getColArrive();
 
     
-        if (ligneDepart == ligneArrivee
-            && colonneDepart == colonneArrivee) {
+        if (ligneDepart == ligneArrivee && colonneDepart == colonneArrivee) {
+            System.out.println("mouvement invalide: départ et arrivée identiques");
             return false;
+            
         }
+
+        
 
    
         if (ligneDepart != ligneArrivee && colonneDepart != colonneArrivee) {
+            System.out.println("mouvement invalide: mouvement diagonal");
             return false;
         }
 
     
         if (isClosedBox(ligneArrivee, colonneArrivee) && pion != Mark.ROI) {
+            System.out.println("mouvement invalide: case fermée");
             return false;
         }
 
@@ -471,9 +494,10 @@ class Board {
             }
 
         
-            if (isClosedBox(ligne, colonne) && pion != Mark.ROI) {
+           /*  if (isClosedBox(ligne, colonne) && pion != Mark.ROI) {
+                System.out.println("mouvement invalide: case fermée sur le chemin");
                 return false;
-            }
+            }*/
 
             ligne += directionLigne;
             colonne += directionColonne;
@@ -484,11 +508,28 @@ class Board {
 
     public boolean cotedangereuxRoi(int ligne, int colonne){
         if (!estDansPlateau(ligne, colonne)){
-            return false;
+            return true;
         }
 
         return board[ligne][colonne] ==  Mark.ROUGE || isClosedBox(ligne, colonne);
     }
 
+    public void afficherLigne(int ligne) {
+        System.out.print("Ligne interne " + ligne + " : ");
+
+        for (int colonne = 0;
+            colonne < board[ligne].length;
+            colonne++) {
+
+            System.out.print(
+                colonne
+                + "="
+                + board[ligne][colonne]
+                + " "
+            );
+        }
+
+        System.out.println();
+    }
 
 }

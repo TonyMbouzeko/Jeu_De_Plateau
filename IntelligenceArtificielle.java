@@ -4,20 +4,13 @@ import java.util.List;
 
     //private static final int MAX_profondeur = 2;
     private long debut;
-    private static final long LIMITE_TEMPS = 4900;
-
-   /*  Move jouer(Board board, Mark maCouleur) {
-    List<Move> coups = board.coupsPossibles(maCouleur);
-
-    if (coups.isEmpty()) {
-        return null;
-    }
-
-    int index = (int) (Math.random() * coups.size());
-    return coups.get(index);
-}*/
+    private static final long LIMITE_TEMPS = 4000;
 
      Move getBestMove(Board board, Mark maCouleur, int profondeur) {
+
+        List<Move> coupsPossibles = board.coupsPossibles(maCouleur);
+
+        System.out.println("Nombre de coups possibles : " + coupsPossibles.size());
 
         if(profondeur <= 0){
             throw new IllegalArgumentException("La profondeur doit être strictement supérieure à 0.");
@@ -44,6 +37,8 @@ import java.util.List;
             copie.play(coup, maCouleur);
 
             int score = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
+
+            System.out.println( coup.getRowDepart() + "," + coup.getColDepart() + " -> " + coup.getRowArrive() + "," + coup.getColArrive() +" => score = " + score);
 
             if (score > meilleurScore) {
                 meilleurScore = score;
@@ -78,15 +73,13 @@ import java.util.List;
             for (Move coup : coups) {
                 
                 if(temps()){
-                    break;
+                    return board.evaluate(maCouleur);
                 }
             
 
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
                 int eval = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
-                maxEval = Math.max(maxEval, eval);
-                alpha = Math.max(alpha, eval);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
                 if (beta <= alpha) {
@@ -101,13 +94,13 @@ import java.util.List;
             for (Move coup : coups) {
                 
                 if(temps()){
-                    break;
+                    return board.evaluate(maCouleur);
                 }
             
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
 
-                int eval = alphaBeta(board, profondeur - 1, alpha, beta, true, maCouleur);
+                int eval = alphaBeta(copie, profondeur - 1, alpha, beta, true, maCouleur);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
             
