@@ -147,11 +147,12 @@ class Board {
         int scoreRouge = 0;
         scoreRouge += evaluationMateriel(nombreRouges, nombreNoirs);
         scoreRouge += evaluationDistanceRoi(ligneRoi, colonneRoi);
-        scoreRouge += evaluationCheminLibreRoi(ligneRoi, colonneRoi);
-        scoreRouge += evaluationRougesAutourRoi(ligneRoi, colonneRoi);
+        scoreRouge += evaluationCheminsLibresVersCoins(ligneRoi, colonneRoi);
+        //scoreRouge += evaluationCheminLibreRoi(ligneRoi, colonneRoi);
+       // scoreRouge += evaluationRougesAutourRoi(ligneRoi, colonneRoi);
         scoreRouge += evaluationMobiliteRoi(ligneRoi, colonneRoi);
-        scoreRouge += directionBloquee(ligneRoi, colonneRoi) * 1000;
-        scoreRouge -= nombreRougesMenaces() * 2500;
+        scoreRouge += evaluationRoiEncerclé(ligneRoi, colonneRoi);
+        //scoreRouge -= nombreRougesMenaces() * 2500;
         // -----------------------------------------------------------------------------------------------------------
         if (mark == Mark.ROUGE){
             return scoreRouge;
@@ -163,31 +164,31 @@ class Board {
     // ---------------------------------------------------------------- Méthode pour la fonction evaluation ----------------------------------------------------------------
 
     public int evaluationMateriel(int nombreRouges, int nombreNoirs) {
-        return (nombreRouges * 1500) - (nombreNoirs * 1000);
+        return (nombreRouges * 150) - (nombreNoirs * 300);
     };
 
     public int evaluationDistanceRoi(int ligneRoi, int colonneRoi) {
         int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
-        return distanceCoin * 5000;
+        return distanceCoin * 500;
     }
 
-    public int evaluationCheminLibreRoi(int ligneRoi, int colonneRoi) {
+   /*  public int evaluationCheminLibreRoi(int ligneRoi, int colonneRoi) {
         if (cheminLibreRoi(ligneRoi, colonneRoi)) {
             return -700000;
         }
         return 0;
-    }
+    }*/
 
     public int evaluationRougesAutourRoi(int ligneRoi, int colonneRoi) {
         int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
         if (ennemiRoi == 1) {
-            return 2000;
+            return 200;
         } else if (ennemiRoi == 2) {
-            return 5000;
+            return 500;
         } else if (ennemiRoi == 3) {
-            return 15000;
+            return 1000;
         } else if (ennemiRoi == 4) {
-            return 30000;
+            return 2000;
         }
         return 0;
     }
@@ -218,6 +219,20 @@ class Board {
         }
 
         return directionsBloquees;
+    }
+
+    public int evaluationRoiEncerclé(int ligneRoi, int colonneRoi) {
+        int directionsBloquees = directionBloquee(ligneRoi, colonneRoi);
+        if (directionsBloquees == 1) {
+            return 3000;
+        }else if (directionsBloquees == 2) {
+            return 6000;
+        } else if (directionsBloquees == 3) {
+            return 12000;
+        } else if (directionsBloquees == 4) {
+            return 250000;
+        }
+        return 0;
     }
 
     public int nombreRougesMenaces() {
@@ -255,6 +270,44 @@ class Board {
             }
         }
         return compteur;
+    }
+
+    public int compterCheminsLibresVersCoins(int ligneRoi, int colonneRoi) {
+        int derniereCase = board.length - 1;
+        int compteur = 0;
+
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi, 0, 0)) {
+            compteur++;
+        }
+
+        if (cheminLibreVersCoin(ligneRoi,colonneRoi, 0, derniereCase)) {
+            compteur++;
+        }
+
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi, derniereCase,0)) {
+            compteur++;
+        }
+
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi,derniereCase, derniereCase)) {
+            compteur++;
+        }
+
+        return compteur;
+    }
+
+    public int evaluationCheminsLibresVersCoins(int ligneRoi, int colonneRoi) {
+        int cheminsLibres = compterCheminsLibresVersCoins(ligneRoi, colonneRoi);
+        
+        if (cheminsLibres ==1){
+            return -400000;
+        } 
+        
+        if (cheminsLibres >= 2){
+            return -800000;
+        }
+
+        return 0;
+
     }
 
 
