@@ -160,7 +160,7 @@ class Client {
                     } else {
                         adversaire = Mark.NOIR;
                     }
-                    b.afficherLigne(coupAdverse.getRowDepart());
+                    //b.afficherLigne(coupAdverse.getRowDepart());
                     b.play(coupAdverse, adversaire);
 
                     System.out.println(

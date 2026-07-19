@@ -43,6 +43,10 @@ class Board {
     }
 
     // Ne pas changer la signature de cette méthode.
+    /**
+     * @param m
+     * @param mark
+     */
     public void play(Move m, Mark mark) {
         if (m == null) {
             throw new IllegalArgumentException("Le mouvement ne peut pas être null.");
@@ -71,22 +75,7 @@ class Board {
             throw new IllegalArgumentException("La case d'arrivée n'est pas vide.");
         }
 
-        System.out.println("Validation du coup : " + m.getRowDepart() + "," + m.getColDepart()  + " -> "  + m.getRowArrive() + "," + m.getColArrive());
-
-        System.out.println( "Camp qui joue : " + mark);
-
-        System.out.println( "Pièce au départ : " + pion);
-
-        System.out.println("Case d'arrivée : " + board[ligneArrivee][colonneArrivee]);
-
-        System.out.println("Validation du coup : " + m.getRowDepart() + "," + m.getColDepart()  + " -> "  + m.getRowArrive() + "," + m.getColArrive());
-
-        System.out.println( "Camp qui joue : " + mark);
-
-        System.out.println( "Pièce au départ : " + pion);
-
-        System.out.println("Case d'arrivée : " + board[ligneArrivee][colonneArrivee]);
-
+       
         if(!mouvementValide(m, pion)){
             throw new IllegalArgumentException("Le mouvement est invalide");
         }
@@ -130,9 +119,9 @@ class Board {
 
         if (!roiSurPlateau()) {
             if (mark == Mark.ROUGE){
-                return 100000;
+                return 1000000;
             }else{
-                return -100000;
+                return -1000000;
             }
         }
 
@@ -155,31 +144,14 @@ class Board {
                 }
             }
         }
-        int scoreRouge = (nombreRouges - nombreNoirs)*3;
-        int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
-        int scoreDistanceRoi = (12 - distanceCoin)*5;
-
-        scoreRouge -= scoreDistanceRoi;
-
-        if ( cheminLibreRoi(ligneRoi, colonneRoi)){
-            scoreRouge -=600;
-        }
-
-        int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
-
-        if (ennemiRoi == 1){
-            scoreRouge +=30;
-        }else if (ennemiRoi ==2){
-            scoreRouge += 100;
-        }else if (ennemiRoi ==3){
-            scoreRouge += 300;
-        }else if (ennemiRoi ==4){
-            scoreRouge += 600;
-        }
-
-        int roimobile = mobiliteRoi(ligneRoi, colonneRoi)*2;
-
-        scoreRouge -= roimobile;
+        int scoreRouge = 0;
+        scoreRouge += evaluationMateriel(nombreRouges, nombreNoirs);
+        scoreRouge += evaluationDistanceRoi(ligneRoi, colonneRoi);
+        scoreRouge += evaluationCheminLibreRoi(ligneRoi, colonneRoi);
+        scoreRouge += evaluationRougesAutourRoi(ligneRoi, colonneRoi);
+        scoreRouge += evaluationMobiliteRoi(ligneRoi, colonneRoi);
+        scoreRouge += directionBloquee(ligneRoi, colonneRoi) * 1000;
+        scoreRouge -= nombreRougesMenaces() * 2500;
         // -----------------------------------------------------------------------------------------------------------
         if (mark == Mark.ROUGE){
             return scoreRouge;
@@ -187,6 +159,107 @@ class Board {
             return -scoreRouge;
         }
     }
+
+    // ---------------------------------------------------------------- Méthode pour la fonction evaluation ----------------------------------------------------------------
+
+    public int evaluationMateriel(int nombreRouges, int nombreNoirs) {
+        return (nombreRouges * 1500) - (nombreNoirs * 1000);
+    };
+
+    public int evaluationDistanceRoi(int ligneRoi, int colonneRoi) {
+        int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
+        return distanceCoin * 5000;
+    }
+
+    public int evaluationCheminLibreRoi(int ligneRoi, int colonneRoi) {
+        if (cheminLibreRoi(ligneRoi, colonneRoi)) {
+            return -500000;
+        }
+        return 0;
+    }
+
+    public int evaluationRougesAutourRoi(int ligneRoi, int colonneRoi) {
+        int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
+        if (ennemiRoi == 1) {
+            return 200;
+        } else if (ennemiRoi == 2) {
+            return 500;
+        } else if (ennemiRoi == 3) {
+            return 1500;
+        } else if (ennemiRoi == 4) {
+            return 10000;
+        }
+        return 0;
+    }
+
+    public int evaluationMobiliteRoi(int ligneRoi, int colonneRoi) {
+        int roimobile = mobiliteRoi(ligneRoi, colonneRoi) * 350;
+        return -roimobile;
+    }
+
+    public int directionBloquee(int ligneRoi, int colonneRoi) {
+        int directionsBloquees = 0;
+        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
+
+        for (int[] direction : directions) {
+            int ligne = ligneRoi + direction[0];
+            int colonne = colonneRoi + direction[1];
+
+            if (!estDansPlateau(ligne, colonne)) {
+                directionsBloquees++;
+                continue;
+            }
+
+            Mark pieceVoisine = board[ligne][colonne];
+
+            if (pieceVoisine == Mark.ROUGE || isClosedBox(ligne, colonne)) {
+                directionsBloquees++;
+            }
+        }
+
+        return directionsBloquees;
+    }
+
+    public int nombreRougesMenaces() {
+        int nombreRougesActuel = compterPieces(Mark.ROUGE);
+        int perteMaximale = 0;
+
+        List<Move> coupsNoirs = coupsPossibles(Mark.NOIR);
+
+        for (Move coup : coupsNoirs) {
+            Board copie = new Board(this);
+
+            try {
+                copie.play(coup, Mark.NOIR);
+
+                int rougesRestants = copie.compterPieces(Mark.ROUGE);
+                int rougesCaptures = nombreRougesActuel - rougesRestants;
+
+                perteMaximale = Math.max(perteMaximale, rougesCaptures);
+            } catch (IllegalArgumentException e) {
+            // On ignore un éventuel mouvement invalide.
+            }
+        }
+
+        return perteMaximale;
+    }
+
+    public int compterPieces(Mark piece) {
+        int compteur = 0;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == piece) {
+                    compteur++;
+                }
+            }
+        }
+        return compteur;
+    }
+
+
+
+    // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -460,22 +533,15 @@ class Board {
 
     
         if (ligneDepart == ligneArrivee && colonneDepart == colonneArrivee) {
-            System.out.println("mouvement invalide: départ et arrivée identiques");
             return false;
             
         }
 
-        
-
-   
         if (ligneDepart != ligneArrivee && colonneDepart != colonneArrivee) {
-            System.out.println("mouvement invalide: mouvement diagonal");
             return false;
         }
-
     
         if (isClosedBox(ligneArrivee, colonneArrivee) && pion != Mark.ROI) {
-            System.out.println("mouvement invalide: case fermée");
             return false;
         }
 
@@ -514,22 +580,5 @@ class Board {
         return board[ligne][colonne] ==  Mark.ROUGE || isClosedBox(ligne, colonne);
     }
 
-    public void afficherLigne(int ligne) {
-        System.out.print("Ligne interne " + ligne + " : ");
-
-        for (int colonne = 0;
-            colonne < board[ligne].length;
-            colonne++) {
-
-            System.out.print(
-                colonne
-                + "="
-                + board[ligne][colonne]
-                + " "
-            );
-        }
-
-        System.out.println();
-    }
 
 }

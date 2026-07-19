@@ -4,13 +4,12 @@ import java.util.List;
 
     //private static final int MAX_profondeur = 2;
     private long debut;
-    private static final long LIMITE_TEMPS = 4000;
+    private static final long LIMITE_TEMPS = 3500;
 
-     Move getBestMove(Board board, Mark maCouleur, int profondeur) {
+    Move getBestMove(Board board, Mark maCouleur, int profondeur) {
 
         List<Move> coupsPossibles = board.coupsPossibles(maCouleur);
 
-        System.out.println("Nombre de coups possibles : " + coupsPossibles.size());
 
         if(profondeur <= 0){
             throw new IllegalArgumentException("La profondeur doit être strictement supérieure à 0.");
@@ -38,7 +37,7 @@ import java.util.List;
 
             int score = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
 
-            System.out.println( coup.getRowDepart() + "," + coup.getColDepart() + " -> " + coup.getRowArrive() + "," + coup.getColArrive() +" => score = " + score);
+            //System.out.println( coup.getRowDepart() + "," + coup.getColDepart() + " -> " + coup.getRowArrive() + "," + coup.getColArrive() +" => score = " + score);
 
             if (score > meilleurScore) {
                 meilleurScore = score;
