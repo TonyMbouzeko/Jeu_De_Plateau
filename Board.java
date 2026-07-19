@@ -111,9 +111,9 @@ class Board {
 
         if (roiAuCoin()) {
             if( mark == Mark.NOIR){
-                return 100000;
+                return 1000000;
             }else{
-                return -100000;
+                return -1000000;
             }
         }
 
@@ -173,7 +173,7 @@ class Board {
 
     public int evaluationCheminLibreRoi(int ligneRoi, int colonneRoi) {
         if (cheminLibreRoi(ligneRoi, colonneRoi)) {
-            return -500000;
+            return -700000;
         }
         return 0;
     }
@@ -181,13 +181,13 @@ class Board {
     public int evaluationRougesAutourRoi(int ligneRoi, int colonneRoi) {
         int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
         if (ennemiRoi == 1) {
-            return 200;
+            return 2000;
         } else if (ennemiRoi == 2) {
-            return 500;
+            return 5000;
         } else if (ennemiRoi == 3) {
-            return 1500;
+            return 15000;
         } else if (ennemiRoi == 4) {
-            return 10000;
+            return 30000;
         }
         return 0;
     }
