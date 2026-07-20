@@ -4,10 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-
 class Client {
 
-    private static final int PROFONDEUR_IA = 2;
+    private static final int PROFONDEUR_IA = 8;
 
     Socket MyClient;
     BufferedInputStream input;
@@ -31,8 +30,7 @@ class Client {
             Client client = new Client();
             Board b = new Board();
 
-            IntelligenceArtificielle iA =
-                new IntelligenceArtificielle();
+            IntelligenceArtificielle iA = new IntelligenceArtificielle();
 
             BufferedInputStream input = client.input;
             BufferedOutputStream output = client.output;
