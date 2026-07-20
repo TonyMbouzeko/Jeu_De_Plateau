@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+
 class Client {
 
     private static final int PROFONDEUR_IA = 2;

@@ -42,11 +42,6 @@ class Board {
         return this.currentPlayer;
     }
 
-    // Ne pas changer la signature de cette méthode.
-    /**
-     * @param m
-     * @param mark
-     */
     public void play(Move m, Mark mark) {
         if (m == null) {
             throw new IllegalArgumentException("Le mouvement ne peut pas être null.");
@@ -108,158 +103,66 @@ class Board {
 
     // Ne pas changer la signature de cette méthode.
     public int evaluate(Mark mark) {
+        final int VICTOIRE = 100000000;
 
+        // Le roi a atteint un coin : les noirs ont gagné.
         if (roiAuCoin()) {
-            if( mark == Mark.NOIR){
-                return 1000000;
-            }else{
-                return -1000000;
-            }
+            return mark == Mark.NOIR ? VICTOIRE : -VICTOIRE;
         }
 
+        // Le roi n'est plus sur le plateau : les rouges ont gagné.
         if (!roiSurPlateau()) {
-            if (mark == Mark.ROUGE){
-                return 1000000;
-            }else{
-                return -1000000;
-            }
+            return mark == Mark.ROUGE ? VICTOIRE : -VICTOIRE;
         }
 
-        // --------------------- Nombre de pièces sur le terrain et distance par rapport au coin venant du roi ------------------------------------------------
-        int nombreNoirs =0;
-        int nombreRouges =0;
+        int[] positionRoi = trouverRoi();
+        int ligneRoi = positionRoi[0];
+        int colonneRoi = positionRoi[1];
 
-        int ligneRoi = -1;
-        int colonneRoi = -1;
+        int nombreRouges = compterPieces(Mark.ROUGE);
+        int nombreNoirs = compterPieces(Mark.NOIR);
+
+        int scoreRouge = 0;
+
         
+        scoreRouge += nombreRouges * 55_000;
+
+        scoreRouge -= nombreNoirs * 20_000;
+
+        int sortiesDirectes = compterCheminsLibresVersCoins(
+                ligneRoi,
+                colonneRoi
+        );
+
+        if (sortiesDirectes >= 2) {
+            scoreRouge -= 60000000;
+        } else if (sortiesDirectes == 1) {
+            scoreRouge -= 30000000;
+        }
+        int directionsBloquees = directionsBloqueesImmediates(
+                ligneRoi,
+                colonneRoi
+        );
+        scoreRouge += directionsBloquees * 15_000;
+
+        scoreRouge -= mobiliteRoi(ligneRoi, colonneRoi) * 1_000;
+
+        return mark == Mark.ROUGE ? scoreRouge : -scoreRouge;
+    }
+
+    private int[] trouverRoi() {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                if (board[i][j] == Mark.ROUGE) {
-                    nombreRouges++;
-                } else if (board[i][j] == Mark.NOIR) {
-                    nombreNoirs++;
-                } else if(board[i][j] == Mark.ROI){
-                    ligneRoi = i;
-                    colonneRoi = j;
+                if (board[i][j] == Mark.ROI) {
+                    return new int[]{i, j};
                 }
             }
         }
-        int scoreRouge = 0;
-        scoreRouge += evaluationMateriel(nombreRouges, nombreNoirs);
-        scoreRouge += evaluationDistanceRoi(ligneRoi, colonneRoi);
-        scoreRouge += evaluationCheminsLibresVersCoins(ligneRoi, colonneRoi);
-        //scoreRouge += evaluationCheminLibreRoi(ligneRoi, colonneRoi);
-       // scoreRouge += evaluationRougesAutourRoi(ligneRoi, colonneRoi);
-        scoreRouge += evaluationMobiliteRoi(ligneRoi, colonneRoi);
-        scoreRouge += evaluationRoiEncerclé(ligneRoi, colonneRoi);
-        //scoreRouge -= nombreRougesMenaces() * 2500;
-        // -----------------------------------------------------------------------------------------------------------
-        if (mark == Mark.ROUGE){
-            return scoreRouge;
-        }else{
-            return -scoreRouge;
-        }
+
+        return new int[]{-1, -1};
     }
 
-    // ---------------------------------------------------------------- Méthode pour la fonction evaluation ----------------------------------------------------------------
-
-    public int evaluationMateriel(int nombreRouges, int nombreNoirs) {
-        return (nombreRouges * 150) - (nombreNoirs * 300);
-    };
-
-    public int evaluationDistanceRoi(int ligneRoi, int colonneRoi) {
-        int distanceCoin = distanceCoinPlusProche(ligneRoi, colonneRoi);
-        return distanceCoin * 500;
-    }
-
-   /*  public int evaluationCheminLibreRoi(int ligneRoi, int colonneRoi) {
-        if (cheminLibreRoi(ligneRoi, colonneRoi)) {
-            return -700000;
-        }
-        return 0;
-    }*/
-
-    public int evaluationRougesAutourRoi(int ligneRoi, int colonneRoi) {
-        int ennemiRoi = rougesAutourDuRoi(ligneRoi, colonneRoi);
-        if (ennemiRoi == 1) {
-            return 200;
-        } else if (ennemiRoi == 2) {
-            return 500;
-        } else if (ennemiRoi == 3) {
-            return 1000;
-        } else if (ennemiRoi == 4) {
-            return 2000;
-        }
-        return 0;
-    }
-
-    public int evaluationMobiliteRoi(int ligneRoi, int colonneRoi) {
-        int roimobile = mobiliteRoi(ligneRoi, colonneRoi) * 350;
-        return -roimobile;
-    }
-
-    public int directionBloquee(int ligneRoi, int colonneRoi) {
-        int directionsBloquees = 0;
-        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
-
-        for (int[] direction : directions) {
-            int ligne = ligneRoi + direction[0];
-            int colonne = colonneRoi + direction[1];
-
-            if (!estDansPlateau(ligne, colonne)) {
-                directionsBloquees++;
-                continue;
-            }
-
-            Mark pieceVoisine = board[ligne][colonne];
-
-            if (pieceVoisine == Mark.ROUGE || isClosedBox(ligne, colonne)) {
-                directionsBloquees++;
-            }
-        }
-
-        return directionsBloquees;
-    }
-
-    public int evaluationRoiEncerclé(int ligneRoi, int colonneRoi) {
-        int directionsBloquees = directionBloquee(ligneRoi, colonneRoi);
-        if (directionsBloquees == 1) {
-            return 3000;
-        }else if (directionsBloquees == 2) {
-            return 6000;
-        } else if (directionsBloquees == 3) {
-            return 12000;
-        } else if (directionsBloquees == 4) {
-            return 250000;
-        }
-        return 0;
-    }
-
-    public int nombreRougesMenaces() {
-        int nombreRougesActuel = compterPieces(Mark.ROUGE);
-        int perteMaximale = 0;
-
-        List<Move> coupsNoirs = coupsPossibles(Mark.NOIR);
-
-        for (Move coup : coupsNoirs) {
-            Board copie = new Board(this);
-
-            try {
-                copie.play(coup, Mark.NOIR);
-
-                int rougesRestants = copie.compterPieces(Mark.ROUGE);
-                int rougesCaptures = nombreRougesActuel - rougesRestants;
-
-                perteMaximale = Math.max(perteMaximale, rougesCaptures);
-            } catch (IllegalArgumentException e) {
-            // On ignore un éventuel mouvement invalide.
-            }
-        }
-
-        return perteMaximale;
-    }
-
-    public int compterPieces(Mark piece) {
+    private int compterPieces(Mark piece) {
         int compteur = 0;
 
         for (int i = 0; i < board.length; i++) {
@@ -269,48 +172,79 @@ class Board {
                 }
             }
         }
+
         return compteur;
     }
 
-    public int compterCheminsLibresVersCoins(int ligneRoi, int colonneRoi) {
+    private int compterCheminsLibresVersCoins(int ligneRoi, int colonneRoi) {
         int derniereCase = board.length - 1;
         int compteur = 0;
 
         if (cheminLibreVersCoin(ligneRoi, colonneRoi, 0, 0)) {
             compteur++;
         }
-
-        if (cheminLibreVersCoin(ligneRoi,colonneRoi, 0, derniereCase)) {
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi, 0, derniereCase)) {
             compteur++;
         }
-
-        if (cheminLibreVersCoin(ligneRoi, colonneRoi, derniereCase,0)) {
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi, derniereCase, 0)) {
             compteur++;
         }
-
-        if (cheminLibreVersCoin(ligneRoi, colonneRoi,derniereCase, derniereCase)) {
+        if (cheminLibreVersCoin(ligneRoi, colonneRoi, derniereCase, derniereCase)) {
             compteur++;
         }
 
         return compteur;
     }
 
-    public int evaluationCheminsLibresVersCoins(int ligneRoi, int colonneRoi) {
-        int cheminsLibres = compterCheminsLibresVersCoins(ligneRoi, colonneRoi);
-        
-        if (cheminsLibres ==1){
-            return -400000;
-        } 
-        
-        if (cheminsLibres >= 2){
-            return -800000;
+    private int directionsBloqueesImmediates(int ligneRoi, int colonneRoi) {
+        int[][] directions = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1}
+        };
+
+        int compteur = 0;
+
+        for (int[] direction : directions) {
+            int ligne = ligneRoi + direction[0];
+            int colonne = colonneRoi + direction[1];
+
+            if (!estDansPlateau(ligne, colonne)) {
+                compteur++;
+            } else if (board[ligne][colonne] == Mark.ROUGE
+                    || isClosedBox(ligne, colonne)) {
+                compteur++;
+            }
         }
 
-        return 0;
-
+        return compteur;
     }
 
+    private int mobiliteRoi(int ligneRoi, int colonneRoi) {
+        int[][] directions = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1}
+        };
 
+        int compteur = 0;
+
+        for (int[] direction : directions) {
+            int ligne = ligneRoi + direction[0];
+            int colonne = colonneRoi + direction[1];
+
+            while (estDansPlateau(ligne, colonne)
+                    && board[ligne][colonne] == Mark.EMPTY) {
+                compteur++;
+                ligne += direction[0];
+                colonne += direction[1];
+            }
+        }
+
+        return compteur;
+    }
 
     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -489,17 +423,6 @@ class Board {
         return ligne >= 0 && ligne < board.length && colonne >= 0 && colonne < board.length;
     }
 
-    public int distanceCoinPlusProche(int ligneRoi, int colonneRoi) {
-        
-        int distanceHautGauche = Math.abs(ligneRoi)+ Math.abs(colonneRoi);
-        int distanceHautDroite = Math.abs(ligneRoi)+ Math.abs(colonneRoi - 12);
-
-        int distanceBasGauche = Math.abs(ligneRoi - 12) + Math.abs(colonneRoi);
-        int distanceBasDroite = Math.abs(ligneRoi - 12) + Math.abs(colonneRoi - 12);
-
-        return Math.min(Math.min(distanceHautGauche, distanceHautDroite), Math.min(distanceBasGauche, distanceBasDroite));
-    }
-
     public boolean cheminLibreVersCoin(int ligneRoi, int colonneRoi, int ligneCoin, int colonneCoin) {
 
         if (ligneRoi != ligneCoin && colonneRoi != colonneCoin) {
@@ -521,61 +444,6 @@ class Board {
         }
 
         return board[ligneCoin][colonneCoin] == Mark.EMPTY;
-    }
-
-    public boolean cheminLibreRoi(int ligneRoi, int colonneRoi) {
-    int derniereCase = board.length - 1;
-    return cheminLibreVersCoin(ligneRoi, colonneRoi, 0, 0) || cheminLibreVersCoin( ligneRoi,colonneRoi, 0,derniereCase)
-                || cheminLibreVersCoin(
-                    ligneRoi,
-                    colonneRoi,
-                    derniereCase,
-                    0
-            )
-            || cheminLibreVersCoin(
-                    ligneRoi,
-                    colonneRoi,
-                    derniereCase,
-                    derniereCase
-            );
-    }
-
-    public int rougesAutourDuRoi(int ligneRoi, int colonneRoi) {
-        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
-        int compteur = 0;
-        for (int[] direction : directions) {
-            int ligneVoisine = ligneRoi + direction[0];
-            int colonneVoisine = colonneRoi + direction[1];
-
-            if (!estDansPlateau(ligneVoisine, colonneVoisine)) {
-                continue;
-            }
-
-            if (board[ligneVoisine][colonneVoisine] == Mark.ROUGE) {
-                compteur++;
-            }
-        }
-
-        return compteur;
-    }
-
-    public int mobiliteRoi(int ligneRoi, int colonneRoi) {
-        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
-        int compteur = 0;
-        for (int[] direction : directions) {
-            int ligne = ligneRoi + direction[0];
-            int colonne = colonneRoi + direction[1];
-
-            while (estDansPlateau(ligne, colonne) && board[ligne][colonne] == Mark.EMPTY) {
-
-                compteur++;
-
-                ligne += direction[0];
-                colonne += direction[1];
-            }
-        }
-
-        return compteur;
     }
 
     public boolean mouvementValide(Move m, Mark pion) {
@@ -611,13 +479,6 @@ class Board {
             if (board[ligne][colonne] != Mark.EMPTY) {
                 return false;
             }
-
-        
-           /*  if (isClosedBox(ligne, colonne) && pion != Mark.ROI) {
-                System.out.println("mouvement invalide: case fermée sur le chemin");
-                return false;
-            }*/
-
             ligne += directionLigne;
             colonne += directionColonne;
         }
@@ -633,5 +494,18 @@ class Board {
         return board[ligne][colonne] ==  Mark.ROUGE || isClosedBox(ligne, colonne);
     }
 
+    // ---------------------------------------------------------------------- Méthode pour éviter les coups repetés ----------------------------------------------------------------------
+    public String obtenirSignature(Mark joueurActuel) {
+        StringBuilder signature = new StringBuilder();
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                signature.append(board[i][j].ordinal());
+            }
+        }
+        signature.append('|');
+        signature.append(joueurActuel);
+        
+        return signature.toString();
+    }
 
 }
