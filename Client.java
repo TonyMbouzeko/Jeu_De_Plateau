@@ -6,7 +6,7 @@ import java.util.List;
 
 class Client {
 
-    private static final int PROFONDEUR_IA = 8;
+    private static final int PROFONDEUR_IA = 10;
 
     Socket MyClient;
     BufferedInputStream input;

@@ -8,7 +8,7 @@ class IntelligenceArtificielle {
      * Le serveur accorde 5 secondes. La recherche est arrêtée avant
      * cette limite afin de conserver du temps pour l'envoi du coup.
      */
-    private static final long LIMITE_TEMPS = 3000;
+    private static final long LIMITE_TEMPS = 1000;
     private static final int INFINI = 1_000_000_000;
 
     private long debut;

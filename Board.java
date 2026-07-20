@@ -120,36 +120,21 @@ class Board {
         int colonneRoi = positionRoi[1];
         int scoreRouge = 0;
 
-        /*
-         * 1) Une sortie directe vers un coin domine tous les autres critères.
-         * La recherche doit absolument fermer cette ligne.
-         */
         int sortiesDirectes = compterCheminsLibresVersCoins(ligneRoi, colonneRoi);
         if (sortiesDirectes > 0) {
             scoreRouge -= 90_000_000;
             scoreRouge -= sortiesDirectes * 1_000_000;
         }
 
-        /*
-         * 2) Conserver les attaquants. La différence de matériel est évaluée
-         * sans appeler une génération de coups supplémentaire.
-         */
         int nombreRouges = compterPieces(Mark.ROUGE);
         int nombreNoirs = compterPieces(Mark.NOIR);
         scoreRouge += nombreRouges * 45_000;
-        scoreRouge -= nombreNoirs * 18_000;
+        scoreRouge -= nombreNoirs * 19_000;
 
-        /*
-         * 3) Fermer les grands axes avant de coller les rouges au roi.
-         */
+    
         int axesFermes = compterAxesFermesDuRoi(ligneRoi, colonneRoi);
-        scoreRouge += axesFermes * 35_000;
+        scoreRouge += axesFermes * 30_000;
 
-        /*
-         * 4) La mobilité reste importante, mais son poids est volontairement
-         * modéré afin de ne pas sacrifier des rouges uniquement pour enfermer
-         * momentanément le roi.
-         */
         int mobilite = mobiliteRoi(ligneRoi, colonneRoi);
         scoreRouge -= mobilite * 2_500;
 
@@ -160,23 +145,27 @@ class Board {
             scoreRouge += 60_000;
         }
 
-        /*
-         * 5) Les blocages immédiats sont utiles surtout lorsqu'ils sont déjà
-         * nombreux. Un seul rouge collé au roi ne doit pas être surévalué.
-         */
-        int directionsBloquees = directionsBloqueesImmediates(ligneRoi, colonneRoi);
-        scoreRouge += directionsBloquees * 6_000;
+        
+        int cotesDangereux = nombreCotesDangereuxRoi();
+        scoreRouge += cotesDangereux * 8_000;
 
-        if (directionsBloquees == 3) {
-            scoreRouge += 70_000;
-        } else if (directionsBloquees == 4) {
-            scoreRouge += 500_000;
+        if (cotesDangereux == 2) {
+            scoreRouge += 80_000;
+        } else if (cotesDangereux == 3) {
+            scoreRouge += 650_000;
         }
 
-        /*
-         * 6) Blockade extérieure : les distances 3 à 5 sont préférées aux
-         * rouges directement adjacents au roi.
-         */
+        int casesCaptureAccessibles = nombreCasesCaptureRoiAccessibles();
+
+     
+        if (cotesDangereux == 3 && casesCaptureAccessibles > 0) {
+            scoreRouge += 6_000_000;
+        } else if (cotesDangereux == 2 && casesCaptureAccessibles >= 2) {
+            scoreRouge += 350_000;
+        } else {
+            scoreRouge += casesCaptureAccessibles * 12_000;
+        }
+
         scoreRouge += scoreCordonAutourRoi(ligneRoi, colonneRoi);
 
         return mark == Mark.ROUGE ? scoreRouge : -scoreRouge;
@@ -194,6 +183,177 @@ class Board {
         return new int[]{-1, -1};
     }
 
+    public Move coupCaptureRoiImmediat() {
+        int[] positionRoi = trouverRoi();
+
+        if (positionRoi[0] < 0) {
+            return null;
+        }
+
+        int ligneRoi = positionRoi[0];
+        int colonneRoi = positionRoi[1];
+
+        int[][] directions = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1}
+        };
+
+        for (int[] directionCible : directions) {
+            int ligneCible = ligneRoi + directionCible[0];
+            int colonneCible = colonneRoi + directionCible[1];
+
+            if (!estDansPlateau(ligneCible, colonneCible)
+                    || board[ligneCible][colonneCible] != Mark.EMPTY
+                    || isClosedBox(ligneCible, colonneCible)) {
+                continue;
+            }
+
+            int autresCotesDangereux = 0;
+
+            for (int[] direction : directions) {
+                if (direction[0] == directionCible[0]
+                        && direction[1] == directionCible[1]) {
+                    continue;
+                }
+
+                if (cotedangereuxRoi(
+                        ligneRoi + direction[0],
+                        colonneRoi + direction[1]
+                )) {
+                    autresCotesDangereux++;
+                }
+            }
+
+            if (autresCotesDangereux != 3) {
+                continue;
+            }
+
+
+            for (int[] directionRecherche : directions) {
+                Move candidat = trouverPremierRougeSurLigne(
+                        ligneCible,
+                        colonneCible,
+                        directionRecherche[0],
+                        directionRecherche[1]
+                );
+
+                if (candidat == null) {
+                    continue;
+                }
+
+                Board copie = new Board(this);
+                copie.play(candidat, Mark.ROUGE);
+
+                if (!copie.roiSurPlateau()) {
+                    return candidat;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public int nombreCotesDangereuxRoi() {
+        int[] positionRoi = trouverRoi();
+
+        if (positionRoi[0] < 0) {
+            return 4;
+        }
+
+        int ligneRoi = positionRoi[0];
+        int colonneRoi = positionRoi[1];
+
+        int compteur = 0;
+
+        if (cotedangereuxRoi(ligneRoi - 1, colonneRoi)) {
+            compteur++;
+        }
+        if (cotedangereuxRoi(ligneRoi + 1, colonneRoi)) {
+            compteur++;
+        }
+        if (cotedangereuxRoi(ligneRoi, colonneRoi - 1)) {
+            compteur++;
+        }
+        if (cotedangereuxRoi(ligneRoi, colonneRoi + 1)) {
+            compteur++;
+        }
+
+        return compteur;
+    }
+
+    private int nombreCasesCaptureRoiAccessibles() {
+        int[] positionRoi = trouverRoi();
+
+        if (positionRoi[0] < 0) {
+            return 0;
+        }
+
+        int ligneRoi = positionRoi[0];
+        int colonneRoi = positionRoi[1];
+
+        int[][] directions = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1}
+        };
+
+        int compteur = 0;
+
+        for (int[] directionCible : directions) {
+            int ligneCible = ligneRoi + directionCible[0];
+            int colonneCible = colonneRoi + directionCible[1];
+
+            if (!estDansPlateau(ligneCible, colonneCible)
+                    || board[ligneCible][colonneCible] != Mark.EMPTY
+                    || isClosedBox(ligneCible, colonneCible)) {
+                continue;
+            }
+
+            if (rougePeutAtteindreLocalement(ligneCible, colonneCible)) {
+                compteur++;
+            }
+        }
+
+        return compteur;
+    }
+
+    private boolean rougePeutAtteindreLocalement(int ligneCible,int colonneCible) {
+        int[][] directions = { {-1, 0},{1, 0}, {0, -1},{0, 1}};
+
+        for (int[] direction : directions) {
+            if (trouverPremierRougeSurLigne(ligneCible, colonneCible,direction[0],direction[1]) != null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Move trouverPremierRougeSurLigne(int ligneCible,int colonneCible,int directionLigne,int directionColonne) {
+        int ligne = ligneCible + directionLigne;
+        int colonne = colonneCible + directionColonne;
+
+        while (estDansPlateau(ligne, colonne)) {
+            Mark piece = board[ligne][colonne];
+
+            if (piece == Mark.ROUGE) {
+                return new Move(ligne, colonne,ligneCible,colonneCible);
+            }
+
+            if (piece != Mark.EMPTY) {
+                return null;
+            }
+
+            ligne += directionLigne;
+            colonne += directionColonne;
+        }
+
+        return null;
+    }
+
     private int compterPieces(Mark piece) {
         int compteur = 0;
 
@@ -208,11 +368,6 @@ class Board {
         return compteur;
     }
 
-    /**
-     * Donne des points aux rouges qui forment un cordon autour du roi.
-     * Une distance de 2 ou 3 cases est particulièrement intéressante :
-     * elle limite les sorties du roi sans concentrer tous les rouges sur lui.
-     */
     private int scoreCordonAutourRoi(int ligneRoi, int colonneRoi) {
         int score = 0;
         int rougesDistance3A5 = 0;
@@ -256,10 +411,6 @@ class Board {
         return score;
     }
 
-    /**
-     * Un axe est fermé lorsqu'une pièce rouge ou une case hostile au roi
-     * apparaît dans cette direction avant que le roi puisse atteindre le bord.
-     */
     private int compterAxesFermesDuRoi(int ligneRoi, int colonneRoi) {
         int[][] directions = {
                 {-1, 0},
@@ -299,158 +450,6 @@ class Board {
         return axesFermes;
     }
 
-    private int compterRougesSoutenus() {
-        int compteur = 0;
-        int[][] directions = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1}
-        };
-
-        for (int ligne = 0; ligne < board.length; ligne++) {
-            for (int colonne = 0; colonne < board[ligne].length; colonne++) {
-                if (board[ligne][colonne] != Mark.ROUGE) {
-                    continue;
-                }
-
-                for (int[] direction : directions) {
-                    int voisinLigne = ligne + direction[0];
-                    int voisinColonne = colonne + direction[1];
-
-                    if (estDansPlateau(voisinLigne, voisinColonne)
-                            && board[voisinLigne][voisinColonne] == Mark.ROUGE) {
-                        compteur++;
-                        break;
-                    }
-                }
-            }
-        }
-
-        return compteur;
-    }
-
-    private int compterRougesIsoles() {
-        int compteur = 0;
-        int[][] directions = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1}
-        };
-
-        for (int ligne = 0; ligne < board.length; ligne++) {
-            for (int colonne = 0; colonne < board[ligne].length; colonne++) {
-                if (board[ligne][colonne] != Mark.ROUGE) {
-                    continue;
-                }
-
-                boolean soutenu = false;
-
-                for (int[] direction : directions) {
-                    int voisinLigne = ligne + direction[0];
-                    int voisinColonne = colonne + direction[1];
-
-                    if (estDansPlateau(voisinLigne, voisinColonne)
-                            && board[voisinLigne][voisinColonne] == Mark.ROUGE) {
-                        soutenu = true;
-                        break;
-                    }
-                }
-
-                if (!soutenu) {
-                    compteur++;
-                }
-            }
-        }
-
-        return compteur;
-    }
-
-    /**
-     * Compte les pions NOIRS distincts qui peuvent être capturés au
-     * prochain coup rouge.
-     */
-    private int compterNoirsMenaces() {
-        Set<Integer> noirsMenaces = new HashSet<>();
-
-        int[][] directions = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1}
-        };
-
-        List<Move> coupsRouges = coupsPossibles(Mark.ROUGE);
-
-        for (int ligneNoir = 0; ligneNoir < board.length; ligneNoir++) {
-            for (int colonneNoir = 0;
-                 colonneNoir < board[ligneNoir].length;
-                 colonneNoir++) {
-
-                if (board[ligneNoir][colonneNoir] != Mark.NOIR) {
-                    continue;
-                }
-
-                int identifiantNoir = ligneNoir * board.length + colonneNoir;
-
-                for (int[] direction : directions) {
-                    int ligneAppui = ligneNoir + direction[0];
-                    int colonneAppui = colonneNoir + direction[1];
-
-                    int ligneCapture = ligneNoir - direction[0];
-                    int colonneCapture = colonneNoir - direction[1];
-
-                    if (!estDansPlateau(ligneAppui, colonneAppui)
-                            || !estDansPlateau(ligneCapture, colonneCapture)) {
-                        continue;
-                    }
-
-                    boolean appuiValide =
-                            board[ligneAppui][colonneAppui] == Mark.ROUGE
-                                    || isClosedBox(ligneAppui, colonneAppui);
-
-                    if (!appuiValide
-                            || board[ligneCapture][colonneCapture] != Mark.EMPTY) {
-                        continue;
-                    }
-
-                    for (Move coup : coupsRouges) {
-                        boolean atteintCaseCapture =
-                                coup.getRowArrive() == ligneCapture
-                                        && coup.getColArrive() == colonneCapture;
-
-                        if (!atteintCaseCapture) {
-                            continue;
-                        }
-
-                        boolean deplaceLeRougeAppui =
-                                board[ligneAppui][colonneAppui] == Mark.ROUGE
-                                        && coup.getRowDepart() == ligneAppui
-                                        && coup.getColDepart() == colonneAppui;
-
-                        if (!deplaceLeRougeAppui) {
-                            noirsMenaces.add(identifiantNoir);
-                            break;
-                        }
-                    }
-
-                    if (noirsMenaces.contains(identifiantNoir)) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return noirsMenaces.size();
-    }
-
-    /**
-     * Calcule le plus grand nombre de rouges que les NOIRS peuvent capturer
-     * avec un seul coup. Cette méthode est volontairement utilisée à la
-     * racine de la recherche, et non dans evaluate(), car elle simule tous
-     * les coups noirs.
-     */
     public int maxRougesCapturablesEnUnCoup() {
         int rougesAvant = compterPieces(Mark.ROUGE);
         int maximum = 0;
@@ -471,17 +470,11 @@ class Board {
         return maximum;
     }
 
-    /**
-     * Indique si les NOIRS possèdent au moins une capture rouge immédiate.
-     */
+  
     public boolean rougeCapturableAuProchainCoup() {
         return maxRougesCapturablesEnUnCoup() > 0;
     }
 
-    /**
-     * Retourne vrai si le roi possède actuellement un déplacement légal
-     * direct vers au moins un coin.
-     */
     public boolean roiPeutGagnerEnUnCoup() {
         int[] positionRoi = trouverRoi();
         int ligneRoi = positionRoi[0];
@@ -514,31 +507,6 @@ class Board {
         return compteur;
     }
 
-    private int directionsBloqueesImmediates(int ligneRoi, int colonneRoi) {
-        int[][] directions = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1}
-        };
-
-        int compteur = 0;
-
-        for (int[] direction : directions) {
-            int ligne = ligneRoi + direction[0];
-            int colonne = colonneRoi + direction[1];
-
-            if (!estDansPlateau(ligne, colonne)) {
-                compteur++;
-            } else if (board[ligne][colonne] == Mark.ROUGE
-                    || isClosedBox(ligne, colonne)) {
-                compteur++;
-            }
-        }
-
-        return compteur;
-    }
-
     private int mobiliteRoi(int ligneRoi, int colonneRoi) {
         int[][] directions = {
                 {-1, 0},
@@ -565,8 +533,6 @@ class Board {
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
     public List<Move> coupsPossibles(Mark camp) {
         List<Move> moves = new ArrayList<>();
@@ -609,8 +575,6 @@ class Board {
 
         return moves;
     }
-
-
 
     public boolean estfini() {
         return roiAuCoin() || !roiSurPlateau();
