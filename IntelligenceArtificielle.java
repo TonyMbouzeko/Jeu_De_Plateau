@@ -4,20 +4,13 @@ import java.util.List;
 
 class IntelligenceArtificielle {
 
-    /*
-     * Le serveur accorde 5 secondes. La recherche est arrêtée avant
-     * cette limite afin de conserver du temps pour l'envoi du coup.
-     */
-    private static final long LIMITE_TEMPS = 1000;
+    private static final long LIMITE_TEMPS = 2500;
     private static final int INFINI = 1_000_000_000;
 
     private long debut;
     private Move dernierCoupIA;
 
-    /*
-     * Exception interne utilisée pour abandonner immédiatement une
-     * profondeur incomplète. Le résultat partiel n'est jamais conservé.
-     */
+
     private static final class TempsEcouleException extends RuntimeException {
         private static final long serialVersionUID = 1L;
     }
@@ -65,33 +58,16 @@ class IntelligenceArtificielle {
             return victoireImmediate;
         }
 
-        /*
-         * Coup de secours toujours légal. Il est remplacé uniquement après
-         * qu'une profondeur a été entièrement terminée.
-         */
         Move meilleurCoupTermine = choisirCoupDeSecours(coups);
         int meilleurScoreTermine = board.evaluate(maCouleur);
         int profondeurTerminee = 0;
 
-        /*
-         * Approfondissement itératif :
-         * profondeur 1, puis 2, puis 3, etc.
-         */
-        for (int profondeur = 1;
-             profondeur <= profondeurMax;
-             profondeur++) {
+        
+        for (int profondeur = 1;profondeur <= profondeurMax; profondeur++) {
 
             try {
-                ResultatRecherche resultat = rechercherRacine(
-                        board,
-                        maCouleur,
-                        profondeur
-                );
+                ResultatRecherche resultat = rechercherRacine(board, maCouleur, profondeur);
 
-                /*
-                 * Ce résultat est enregistré seulement si toute la profondeur
-                 * a été calculée avant la limite de temps.
-                 */
                 meilleurCoupTermine = resultat.coup;
                 meilleurScoreTermine = resultat.score;
                 profondeurTerminee = profondeur;
@@ -103,30 +79,17 @@ class IntelligenceArtificielle {
 
         dernierCoupIA = meilleurCoupTermine;
 
-        System.out.println(
-                "Profondeur terminée : " + profondeurTerminee
-                        + " | Score : " + meilleurScoreTermine
-                        + " | Coup : " + meilleurCoupTermine
-        );
+        System.out.println("Profondeur terminée : " + profondeurTerminee + " | Score : " + meilleurScoreTermine   + " | Coup : " + meilleurCoupTermine);
 
         return meilleurCoupTermine;
     }
 
-    private ResultatRecherche rechercherRacine(
-            Board board,
-            Mark maCouleur,
-            int profondeur
-    ) {
+    private ResultatRecherche rechercherRacine( Board board,Mark maCouleur,int profondeur) {
         verifierTemps();
 
         List<Move> coups = new ArrayList<>(
                 board.coupsPossibles(maCouleur)
         );
-
-        /*
-         * L'ordre des coups est surtout utile à la racine :
-         * les meilleurs coups probables sont examinés en premier.
-         */
         ordonnerCoupsRacine(board, coups, maCouleur);
 
         Move meilleurCoup = null;
@@ -149,11 +112,6 @@ class IntelligenceArtificielle {
                     maCouleur
             );
 
-            /*
-             * Protection tactique à la racine. Même si une recherche peu
-             * profonde ne voit pas toute la séquence, l'IA refuse de sacrifier
-             * facilement un attaquant pour réduire momentanément la mobilité.
-             */
             if (maCouleur == Mark.ROUGE) {
                 int rougesCapturables = copie.maxRougesCapturablesEnUnCoup();
 
@@ -181,23 +139,14 @@ class IntelligenceArtificielle {
         return new ResultatRecherche(meilleurCoup, meilleurScore);
     }
 
-    public int alphaBeta(
-            Board board,
-            int profondeur,
-            int alpha,
-            int beta,
-            boolean isMax,
-            Mark maCouleur
-    ) {
+    public int alphaBeta(Board board,int profondeur,int alpha,int beta,boolean isMax,Mark maCouleur) {
         verifierTemps();
 
         if (board.estfini() || profondeur <= 0) {
             return board.evaluate(maCouleur);
         }
 
-        Mark joueurActuel = isMax
-                ? maCouleur
-                : adversaire(maCouleur);
+        Mark joueurActuel = isMax? maCouleur: adversaire(maCouleur);
 
         List<Move> coups = board.coupsPossibles(joueurActuel);
 
@@ -214,15 +163,7 @@ class IntelligenceArtificielle {
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
 
-                int score = alphaBeta(
-                        copie,
-                        profondeur - 1,
-                        alpha,
-                        beta,
-                        false,
-                        maCouleur
-                );
-
+                int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
                 meilleurScore = Math.max(meilleurScore, score);
                 alpha = Math.max(alpha, meilleurScore);
 
@@ -242,14 +183,7 @@ class IntelligenceArtificielle {
             Board copie = new Board(board);
             copie.play(coup, joueurActuel);
 
-            int score = alphaBeta(
-                    copie,
-                    profondeur - 1,
-                    alpha,
-                    beta,
-                    true,
-                    maCouleur
-            );
+            int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
 
             meilleurScore = Math.min(meilleurScore, score);
             beta = Math.min(beta, meilleurScore);
@@ -262,31 +196,13 @@ class IntelligenceArtificielle {
         return meilleurScore;
     }
 
-    private void ordonnerCoupsRacine(
-            Board board,
-            List<Move> coups,
-            Mark maCouleur
+    private void ordonnerCoupsRacine(Board board,List<Move> coups,Mark maCouleur
     ) {
-        coups.sort(
-                Comparator.comparingInt(
-                        (Move coup) -> scoreOrdreRacine(
-                                board,
-                                coup,
-                                maCouleur
-                        )
-                ).reversed()
-        );
+        coups.sort(Comparator.comparingInt((Move coup) -> scoreOrdreRacine(board, coup, maCouleur)).reversed());
     }
 
-    private int scoreOrdreRacine(
-            Board board,
-            Move coup,
-            Mark maCouleur
-    ) {
-        /*
-         * Cette méthode est appelée avant la recherche chronométrée de chaque
-         * profondeur. Elle reste volontairement simple.
-         */
+    private int scoreOrdreRacine( Board board,Move coup,Mark maCouleur) {
+
         Board copie = new Board(board);
         copie.play(coup, maCouleur);
 
@@ -296,10 +212,6 @@ class IntelligenceArtificielle {
 
         int score = copie.evaluate(maCouleur);
 
-        /*
-         * Pour les rouges, un coup qui laisse au roi un accès direct à un coin
-         * est placé à la fin de la liste.
-         */
         if (maCouleur == Mark.ROUGE
                 && copie.roiPeutGagnerEnUnCoup()) {
             score -= 95_000_000;
@@ -310,10 +222,6 @@ class IntelligenceArtificielle {
             score -= rougesCapturables * 500_000;
         }
 
-        /*
-         * Évite de remettre immédiatement une pièce à son ancienne position
-         * lorsque plusieurs coups ont une valeur semblable.
-         */
         if (estCoupInverse(coup, dernierCoupIA)) {
             score -= 1_000;
         }
@@ -321,19 +229,14 @@ class IntelligenceArtificielle {
         return score;
     }
 
-    private Move chercherVictoireImmediate(
-            Board board,
-            Mark maCouleur,
-            List<Move> coups
-    ) {
+    private Move chercherVictoireImmediate(Board board,Mark maCouleur,List<Move> coups) {
         for (Move coup : coups) {
             verifierTemps();
 
             Board copie = new Board(board);
             copie.play(coup, maCouleur);
 
-            if (copie.estfini()
-                    && copie.evaluate(maCouleur) > 0) {
+            if (copie.estfini() && copie.evaluate(maCouleur) > 0) {
                 return coup;
             }
         }
@@ -355,10 +258,7 @@ class IntelligenceArtificielle {
         return coups.get(0);
     }
 
-    private boolean prefererAuDepartage(
-            Move candidat,
-            Move meilleurActuel
-    ) {
+    private boolean prefererAuDepartage(Move candidat,Move meilleurActuel) {
         if (candidat == null) {
             return false;
         }
@@ -367,18 +267,15 @@ class IntelligenceArtificielle {
             return true;
         }
 
-        boolean candidatEstInverse =
-                estCoupInverse(candidat, dernierCoupIA);
+        boolean candidatEstInverse = estCoupInverse(candidat, dernierCoupIA);
 
-        boolean meilleurEstInverse =
-                estCoupInverse(meilleurActuel, dernierCoupIA);
+        boolean meilleurEstInverse =estCoupInverse(meilleurActuel, dernierCoupIA);
 
         return !candidatEstInverse && meilleurEstInverse;
     }
 
     public boolean temps() {
-        return System.currentTimeMillis() - debut
-                >= LIMITE_TEMPS;
+        return System.currentTimeMillis() - debut >= LIMITE_TEMPS;
     }
 
     private void verifierTemps() {
@@ -395,14 +292,7 @@ class IntelligenceArtificielle {
             return false;
         }
 
-        return coup.getRowDepart()
-                        == precedent.getRowArrive()
-                && coup.getColDepart()
-                        == precedent.getColArrive()
-                && coup.getRowArrive()
-                        == precedent.getRowDepart()
-                && coup.getColArrive()
-                        == precedent.getColDepart();
+        return coup.getRowDepart()  == precedent.getRowArrive() && coup.getColDepart() == precedent.getColArrive() && coup.getRowArrive()  == precedent.getRowDepart() && coup.getColArrive() == precedent.getColDepart();
     }
 
     private Mark adversaire(Mark joueur) {
