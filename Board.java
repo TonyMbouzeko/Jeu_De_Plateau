@@ -129,7 +129,7 @@ class Board {
         int nombreRouges = compterPieces(Mark.ROUGE);
         int nombreNoirs = compterPieces(Mark.NOIR);
         scoreRouge += nombreRouges * 45_000;
-        scoreRouge -= nombreNoirs * 19_000;
+        scoreRouge -= nombreNoirs * 15_000;
 
     
         int axesFermes = compterAxesFermesDuRoi(ligneRoi, colonneRoi);
@@ -382,7 +382,6 @@ class Board {
                         + Math.abs(colonne - colonneRoi);
 
                 if (distance == 1) {
-                    // Très faible récompense : cette case est tactiquement risquée.
                     score += 500;
                 } else if (distance == 2) {
                     score += 1_500;
