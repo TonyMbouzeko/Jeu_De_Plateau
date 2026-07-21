@@ -163,7 +163,7 @@ class IntelligenceArtificielle {
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
 
-                int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
+                int score = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
                 meilleurScore = Math.max(meilleurScore, score);
                 alpha = Math.max(alpha, meilleurScore);
 
@@ -173,31 +173,30 @@ class IntelligenceArtificielle {
             }
 
             return meilleurScore;
-        }
+        }else {
+            int meilleurScore = INFINI;
 
-        int meilleurScore = INFINI;
+            for (Move coup : coups) {
+                verifierTemps();
 
-        for (Move coup : coups) {
-            verifierTemps();
+                Board copie = new Board(board);
+                copie.play(coup, joueurActuel);
 
-            Board copie = new Board(board);
-            copie.play(coup, joueurActuel);
+                int score = alphaBeta(copie, profondeur - 1, alpha, beta, true, maCouleur);
 
-            int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
+                meilleurScore = Math.min(meilleurScore, score);
+                beta = Math.min(beta, meilleurScore);
 
-            meilleurScore = Math.min(meilleurScore, score);
-            beta = Math.min(beta, meilleurScore);
-
-            if (alpha >= beta) {
-                break;
+                if (alpha >= beta) {
+                    break;
+                }
             }
-        }
 
-        return meilleurScore;
+            return meilleurScore;
+        }
     }
 
-    private void ordonnerCoupsRacine(Board board,List<Move> coups,Mark maCouleur
-    ) {
+    private void ordonnerCoupsRacine(Board board,List<Move> coups,Mark maCouleur) {
         coups.sort(Comparator.comparingInt((Move coup) -> scoreOrdreRacine(board, coup, maCouleur)).reversed());
     }
 
