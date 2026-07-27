@@ -103,14 +103,7 @@ class IntelligenceArtificielle {
             Board copie = new Board(board);
             copie.play(coup, maCouleur);
 
-            int score = alphaBeta(
-                    copie,
-                    profondeur - 1,
-                    alpha,
-                    beta,
-                    false,
-                    maCouleur
-            );
+            int score = alphaBeta(copie,profondeur - 1, alpha, beta, false, maCouleur);
 
             if (maCouleur == Mark.ROUGE) {
                 int rougesCapturables = copie.maxRougesCapturablesEnUnCoup();
