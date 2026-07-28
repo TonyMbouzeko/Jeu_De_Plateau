@@ -130,12 +130,16 @@ class Board {
     }
 
     private int evaluateRouge() {
+
         int[] positionRoi = trouverRoi();
         int ligneRoi = positionRoi[0];
         int colonneRoi = positionRoi[1];
         int scoreRouge = 0;
 
         int sortiesDirectes = compterCheminsLibresVersCoins(ligneRoi,colonneRoi);
+        int noirsAdjacents = nombreNoirsAdjacentsAuRoi();
+
+        
 
         if (sortiesDirectes > 0) {
             scoreRouge -= 90_000_000;
@@ -146,7 +150,7 @@ class Board {
         int nombreNoirs = compterPieces(Mark.NOIR);
 
         scoreRouge += nombreRouges * 45_000;
-        scoreRouge -= nombreNoirs * 25_000;
+        scoreRouge -= nombreNoirs * 24_000;
 
         int axesFermes = compterAxesFermesDuRoi(ligneRoi,colonneRoi);
 
@@ -168,10 +172,12 @@ class Board {
 
         scoreRouge += cotesDangereux * 8_000;
 
-        if (cotesDangereux == 2) {
-            scoreRouge += 80_000;
+        if (cotesDangereux == 1) {
+            scoreRouge += 20_000;
+        } else if (cotesDangereux == 2) {
+            scoreRouge += 250_000;
         } else if (cotesDangereux == 3) {
-            scoreRouge += 655_000;
+            scoreRouge += 1_000_000;
         }
 
         int casesCaptureAccessibles =
@@ -179,16 +185,27 @@ class Board {
 
         if (cotesDangereux == 3
                 && casesCaptureAccessibles > 0) {
-            scoreRouge += 6_000_000;
+            scoreRouge += 8_000_000;
 
+        } else if(cotesDangereux == 3){
+            scoreRouge += 1_000_000;
         } else if (cotesDangereux == 2 && casesCaptureAccessibles >= 2) {
-            scoreRouge += 350_000;
+            scoreRouge += 600_000;
 
+        } else if(cotesDangereux == 2 && casesCaptureAccessibles == 1){
+                scoreRouge += 250_000;
         } else {
-            scoreRouge += casesCaptureAccessibles * 12_000;
+            scoreRouge += casesCaptureAccessibles * 20_000;
         }
 
         scoreRouge += scoreCordonAutourRoi(ligneRoi,colonneRoi);
+
+        scoreRouge += noirsAdjacents * 200_000;
+
+        if (noirsAdjacents == 3 && noirsAdjacents == 1) {
+            scoreRouge += 750_000;
+        }
+
         return scoreRouge;
     }
 
@@ -920,4 +937,31 @@ class Board {
         return signature.toString();
     }
 
+    private int nombreNoirsAdjacentsAuRoi() {
+        int[] positionRoi = trouverRoi();
+
+        if (positionRoi[0] < 0) {
+            return 0;
+        }
+
+        int ligneRoi = positionRoi[0];
+        int colonneRoi = positionRoi[1];
+
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+        int compteur = 0;
+
+        for (int[] direction : directions) {
+            int ligne = ligneRoi + direction[0];
+            int colonne = colonneRoi + direction[1];
+
+            if (estDansPlateau(ligne, colonne)
+                && board[ligne][colonne] == Mark.NOIR) {
+                compteur++;
+            }
+        }
+
+        return compteur;
+    }
 }
+
