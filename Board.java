@@ -272,13 +272,15 @@ class Board {
         if (noirsAdjacents >= 3) {
             scoreNoir += 1_500_000;
         }
+
+        scoreNoir += scoreEscorteRoi(ligneRoi, colonneRoi);
        
 
         int nombreNoirs = compterPieces(Mark.NOIR);
         int nombreRouges = compterPieces(Mark.ROUGE);
 
-        scoreNoir += nombreNoirs * 20_000;
-        scoreNoir -= nombreRouges * 18_000;
+        scoreNoir += nombreNoirs * 35_000;
+        scoreNoir -= nombreRouges * 20_000;
 
         int zoneAccessible = tailleZoneAccessibleRoi();
         scoreNoir += zoneAccessible * 9_000;
@@ -294,10 +296,7 @@ class Board {
         return scoreNoir;
     }
 
-    private int scoreMeilleureRouteVersCoin(
-            int ligneRoi,
-            int colonneRoi
-    ) {
+    private int scoreMeilleureRouteVersCoin(int ligneRoi,int colonneRoi) {
         int derniereCase = board.length - 1;
 
         int[][] coins = {{0, 0},{0, derniereCase}, {derniereCase, 0}, {derniereCase, derniereCase}};
@@ -843,6 +842,48 @@ class Board {
     
 
         return compteur;
+    }
+
+    private int scoreEscorteRoi(int ligneRoi, int colonneRoi) {
+        int score = 0;
+        int nombreEscortesProches = 0;
+
+        for (int ligne = 0; ligne < board.length; ligne++) {
+            for (int colonne = 0; colonne < board[ligne].length; colonne++) {
+
+                if (board[ligne][colonne] != Mark.NOIR) {
+                    continue;
+                }
+
+                int distance =Math.abs(ligne - ligneRoi) + Math.abs(colonne - colonneRoi);
+
+                if (distance == 1) {
+                    score -= 50_000;
+                } else if (distance == 2) {
+                    score += 45_000;
+                    nombreEscortesProches++;
+
+                } else if (distance == 3) {
+                    score += 30_000;
+                    nombreEscortesProches++;
+
+                } else if (distance == 4) {
+                    score += 10_000;
+
+                } else if (distance >= 7) {
+                    score -= 5_000;
+                }
+            }
+        }
+        if (nombreEscortesProches >= 2) {
+            score += 60_000;
+        }
+
+        if (nombreEscortesProches >= 4) {
+            score += 120_000;
+        }
+
+        return score;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
