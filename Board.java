@@ -5,6 +5,8 @@ import java.util.Set;
 
 // IMPORTANT: Il ne faut pas changer la signature des méthodes
 // de cette classe, ni le nom de la classe.
+
+//Cette classe est pour le plateau de jeu (la compétition).
 class Board {
     private Mark[][] board;
     private Mark currentPlayer;
