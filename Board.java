@@ -7,6 +7,7 @@ import java.util.Set;
 // de cette classe, ni le nom de la classe.
 
 //Cette classe est pour le plateau de jeu (la compétition).
+//Commande pour lancer le .JAR:  java -jar JeuDePlateau.jar 192.168.1.15 8888
 class Board {
     private Mark[][] board;
     private Mark currentPlayer;
