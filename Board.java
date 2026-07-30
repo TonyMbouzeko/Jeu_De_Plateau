@@ -145,7 +145,7 @@ class Board {
         int nombreNoirs = compterPieces(Mark.NOIR);
 
         scoreRouge += nombreRouges * 45_000;
-        scoreRouge -= nombreNoirs * 37_000;
+        scoreRouge -= nombreNoirs * 40_000;
 
 
 
@@ -661,6 +661,27 @@ class Board {
 
         return maximum;
     }
+    
+    public int maxNoirsCapturablesEnUnCoup() {
+        int noirsAvant = compterPieces(Mark.NOIR);
+        int maximum = 0;
+
+        for (Move coup : coupsPossibles(Mark.ROUGE)) {
+            Board copie = new Board(this);
+            copie.play(coup, Mark.ROUGE);
+
+            int captures = noirsAvant - copie.compterPieces(Mark.NOIR);
+            maximum = Math.max(maximum, captures);
+
+          
+            if (maximum >= 2) {
+                return maximum;
+            }
+        }
+
+        return maximum;
+    }
+
 
     public boolean roiPeutGagnerEnUnCoup() {
         int[] positionRoi = trouverRoi();

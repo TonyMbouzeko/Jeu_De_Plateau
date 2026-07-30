@@ -4,7 +4,7 @@ import java.util.List;
 
 class IntelligenceArtificielle {
 
-    public static final long LIMITE_TEMPS = 3700;
+    public static final long LIMITE_TEMPS = 3900;
     public static final int INFINI = 1_000_000_000;
 
     public long debut;
