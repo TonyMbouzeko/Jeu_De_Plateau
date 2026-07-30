@@ -4,7 +4,7 @@ import java.util.List;
 
 class IntelligenceArtificielle {
 
-    public static final long LIMITE_TEMPS = 3500;
+    public static final long LIMITE_TEMPS = 3700;
     public static final int INFINI = 1_000_000_000;
 
     public long debut;
@@ -183,7 +183,7 @@ class IntelligenceArtificielle {
             Board copie = new Board(board);
             copie.play(coup, joueurActuel);
 
-            int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
+            int score = alphaBeta(copie,profondeur - 1,alpha,beta,true,maCouleur);
 
             meilleurScore = Math.min(meilleurScore, score);
             beta = Math.min(beta, meilleurScore);

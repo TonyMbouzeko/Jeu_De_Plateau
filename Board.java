@@ -1,6 +1,4 @@
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -101,7 +99,6 @@ class Board {
         int n = board.length;
         boolean coin = (r == 0 || r == n - 1) && (c == 0 || c == n - 1);
         boolean trone = r == n / 2 && c == n / 2;
-
         return coin || trone;
     }
 
@@ -148,7 +145,19 @@ class Board {
         int nombreNoirs = compterPieces(Mark.NOIR);
 
         scoreRouge += nombreRouges * 45_000;
-        scoreRouge -= nombreNoirs * 22_000;
+        scoreRouge -= nombreNoirs * 37_000;
+
+
+
+        if (nombreNoirs == 0) {
+            scoreRouge += 1_600_000;
+        } else if (nombreNoirs == 1) {
+            scoreRouge += 400_000;
+        } else if (nombreNoirs == 2) {
+            scoreRouge += 120_000;
+        }else if (nombreNoirs <= 5){
+            scoreRouge += 70_000;
+        }
 
         int axesFermes = compterAxesFermesDuRoi(ligneRoi,colonneRoi);
 
@@ -176,11 +185,9 @@ class Board {
             scoreRouge += 655_000;
         }
 
-        int casesCaptureAccessibles =
-                nombreCasesCaptureRoiAccessibles();
+        int casesCaptureAccessibles = nombreCasesCaptureRoiAccessibles();
 
-        if (cotesDangereux == 3
-                && casesCaptureAccessibles > 0) {
+        if (cotesDangereux == 3 && casesCaptureAccessibles > 0) {
             scoreRouge += 6_000_000;
 
         } else if (cotesDangereux == 2 && casesCaptureAccessibles >= 2) {
@@ -190,28 +197,17 @@ class Board {
             scoreRouge += casesCaptureAccessibles * 12_000;
         }
 
-        int zoneAccessible = tailleZoneAccessibleRoi();
+        int scoreCordon = scoreCordonAutourRoi(ligneRoi,colonneRoi);
 
-    
-        scoreRouge -= zoneAccessible * 12_000;
-
-        if (zoneAccessible <= 30) {
-            scoreRouge += 120_000;
-        }
-        if (zoneAccessible <= 20) {
-            scoreRouge += 280_000;
-        }
-        if (zoneAccessible <= 12) {
-            scoreRouge += 650_000;
-        }
-        if (zoneAccessible <= 8) {
-            scoreRouge += 1_200_000;
-        }
-        if (zoneAccessible <= 4) {
-            scoreRouge += 1_500_000;
+        if (nombreNoirs <= 1) {
+          scoreCordon /=4;
+        }else if (nombreNoirs <= 3){
+            scoreCordon /= 2;
+        }else if (nombreNoirs <= 6){
+            scoreCordon = scoreCordon *3/4;
         }
 
-        scoreRouge += scoreCordonAutourRoi(ligneRoi,colonneRoi);
+        scoreRouge += scoreCordon;
         scoreRouge += scoreCompressionAutourRoi(ligneRoi,colonneRoi);
 
         return scoreRouge;
@@ -270,16 +266,6 @@ class Board {
 
         scoreNoir += nombreNoirs * 20_000;
         scoreNoir -= nombreRouges * 18_000;
-
-        int zoneAccessible = tailleZoneAccessibleRoi();
-        scoreNoir += zoneAccessible * 9_000;
-
-        if (zoneAccessible >= 35) {
-            scoreNoir += 150_000;
-        }
-        if (zoneAccessible >= 55) {
-            scoreNoir += 300_000;
-        }
 
         // Le même indicateur de compression est défavorable aux défenseurs.
         scoreNoir -= scoreCompressionAutourRoi(ligneRoi,colonneRoi);
@@ -485,9 +471,7 @@ class Board {
             int ligneCible = ligneRoi + directionCible[0];
             int colonneCible = colonneRoi + directionCible[1];
 
-            if (!estDansPlateau(ligneCible, colonneCible)
-                    || board[ligneCible][colonneCible] != Mark.EMPTY
-                    || isClosedBox(ligneCible, colonneCible)) {
+            if (!estDansPlateau(ligneCible, colonneCible) || board[ligneCible][colonneCible] != Mark.EMPTY|| isClosedBox(ligneCible, colonneCible)) {
                 continue;
             }
 
@@ -678,11 +662,6 @@ class Board {
         return maximum;
     }
 
-  
-    public boolean rougeCapturableAuProchainCoup() {
-        return maxRougesCapturablesEnUnCoup() > 0;
-    }
-
     public boolean roiPeutGagnerEnUnCoup() {
         int[] positionRoi = trouverRoi();
         int ligneRoi = positionRoi[0];
@@ -735,58 +714,14 @@ class Board {
         return compteur;
     }
 
-    public int tailleZoneAccessibleRoi() {
-        int[] positionRoi = trouverRoi();
-
-        if (positionRoi[0] < 0) {
-            return 0;
-        }
-
-        boolean[][] visite = new boolean[board.length][board.length];
-        Deque<int[]> aVisiter = new ArrayDeque<>();
-
-        visite[positionRoi[0]][positionRoi[1]] = true;
-        aVisiter.addLast(new int[]{positionRoi[0], positionRoi[1]});
-
-        int[][] directions = {{-1, 0},{1, 0},{0, -1},{0, 1}};
-        int casesAccessibles = 0;
-
-        while (!aVisiter.isEmpty()) {
-            int[] caseActuelle = aVisiter.removeFirst();
-
-            for (int[] direction : directions) {
-                int ligne = caseActuelle[0] + direction[0];
-                int colonne = caseActuelle[1] + direction[1];
-
-                if (!estDansPlateau(ligne, colonne) || visite[ligne][colonne]) {
-                    continue;
-                }
-
-                if (board[ligne][colonne] != Mark.EMPTY) {
-                    continue;
-                }
-
-                visite[ligne][colonne] = true;
-                casesAccessibles++;
-                aVisiter.addLast(new int[]{ligne, colonne});
-            }
-        }
-
-        return casesAccessibles;
-    }
-
     public int mobiliteRoiActuelle() {
         int[] positionRoi = trouverRoi();
-        return positionRoi[0] < 0
-                ? 0
-                : mobiliteRoi(positionRoi[0], positionRoi[1]);
+        return positionRoi[0] < 0 ? 0 : mobiliteRoi(positionRoi[0], positionRoi[1]);
     }
 
     public int nombreAxesFermesRoi() {
         int[] positionRoi = trouverRoi();
-        return positionRoi[0] < 0
-                ? 4
-                : compterAxesFermesDuRoi(positionRoi[0], positionRoi[1]);
+        return positionRoi[0] < 0 ? 4 : compterAxesFermesDuRoi(positionRoi[0], positionRoi[1]);
     }
 
     public int pressionBlockadeRoi() {
@@ -860,8 +795,7 @@ class Board {
 
     public Mark[][] loadFromServer(String[] boardValues) {
         if (boardValues == null || boardValues.length != 169) {
-            throw new IllegalArgumentException(
-                    "Le plateau doit contenir exactement 169 valeurs.");
+            throw new IllegalArgumentException( "Le plateau doit contenir exactement 169 valeurs.");
         }
 
         Mark[][] tableau = new Mark[13][13];
@@ -1053,20 +987,4 @@ class Board {
 
         return board[ligne][colonne] ==  Mark.ROUGE || isClosedBox(ligne, colonne);
     }
-
-    // ---------------------------------------------------------------------- Méthode pour éviter les coups repetés ----------------------------------------------------------------------
-    
-    public String obtenirSignature(Mark joueurActuel) {
-        StringBuilder signature = new StringBuilder();
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                signature.append(board[i][j].ordinal());
-            }
-        }
-        signature.append('|');
-        signature.append(joueurActuel);
-        
-        return signature.toString();
-    }
-
 }
