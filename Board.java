@@ -144,7 +144,7 @@ class Board {
         int nombreRouges = compterPieces(Mark.ROUGE);
         int nombreNoirs = compterPieces(Mark.NOIR);
 
-        // Le matériel reste important, mais ne doit plus dominer le blockade.
+       
         scoreRouge += nombreRouges * 38_000;
         scoreRouge -= nombreNoirs * 32_000;
 
@@ -155,7 +155,7 @@ class Board {
         } else if (nombreNoirs == 1) {
             scoreRouge += 400_000;
         } else if (nombreNoirs == 2) {
-            scoreRouge += 120_000;
+            scoreRouge += 220_000;
         }else if (nombreNoirs <= 6){
             scoreRouge += 70_000;
         }
@@ -198,10 +198,7 @@ class Board {
             scoreRouge += casesCaptureAccessibles * 12_000;
         }
 
-        /*
-         * Le blockade reste prioritaire même lorsqu'il reste peu de défenseurs.
-         * Réduire ce score en fin de partie ouvrait précisément le cordon.
-         */
+        
         scoreRouge += scoreCordonAutourRoi(ligneRoi, colonneRoi);
         scoreRouge += scoreCompressionAutourRoi(ligneRoi, colonneRoi);
 
