@@ -4,22 +4,22 @@ import java.util.List;
 
 class IntelligenceArtificielle {
 
-    private static final long LIMITE_TEMPS = 2500;
-    private static final int INFINI = 1_000_000_000;
+    public static final long LIMITE_TEMPS = 3500;
+    public static final int INFINI = 1_000_000_000;
 
-    private long debut;
-    private Move dernierCoupIA;
+    public long debut;
+    public Move dernierCoupIA;
 
 
-    private static final class TempsEcouleException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
+    public static final class TempsEcouleException extends RuntimeException {
+        public static final long serialVersionUID = 1L;
     }
 
-    private static final class ResultatRecherche {
-        private final Move coup;
-        private final int score;
+    public static final class ResultatRecherche {
+        public final Move coup;
+        public final int score;
 
-        private ResultatRecherche(Move coup, int score) {
+        public ResultatRecherche(Move coup, int score) {
             this.coup = coup;
             this.score = score;
         }
@@ -84,7 +84,7 @@ class IntelligenceArtificielle {
         return meilleurCoupTermine;
     }
 
-    private ResultatRecherche rechercherRacine( Board board,Mark maCouleur,int profondeur) {
+    public ResultatRecherche rechercherRacine( Board board,Mark maCouleur,int profondeur) {
         verifierTemps();
 
         List<Move> coups = new ArrayList<>(
@@ -103,7 +103,14 @@ class IntelligenceArtificielle {
             Board copie = new Board(board);
             copie.play(coup, maCouleur);
 
-            int score = alphaBeta(copie,profondeur - 1, alpha, beta, false, maCouleur);
+            int score = alphaBeta(
+                    copie,
+                    profondeur - 1,
+                    alpha,
+                    beta,
+                    false,
+                    maCouleur
+            );
 
             if (maCouleur == Mark.ROUGE) {
                 int rougesCapturables = copie.maxRougesCapturablesEnUnCoup();
@@ -156,7 +163,7 @@ class IntelligenceArtificielle {
                 Board copie = new Board(board);
                 copie.play(coup, joueurActuel);
 
-                int score = alphaBeta(copie, profondeur - 1, alpha, beta, false, maCouleur);
+                int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
                 meilleurScore = Math.max(meilleurScore, score);
                 alpha = Math.max(alpha, meilleurScore);
 
@@ -166,34 +173,35 @@ class IntelligenceArtificielle {
             }
 
             return meilleurScore;
-        }else {
-            int meilleurScore = INFINI;
-
-            for (Move coup : coups) {
-                verifierTemps();
-
-                Board copie = new Board(board);
-                copie.play(coup, joueurActuel);
-
-                int score = alphaBeta(copie, profondeur - 1, alpha, beta, true, maCouleur);
-
-                meilleurScore = Math.min(meilleurScore, score);
-                beta = Math.min(beta, meilleurScore);
-
-                if (alpha >= beta) {
-                    break;
-                }
-            }
-
-            return meilleurScore;
         }
+
+        int meilleurScore = INFINI;
+
+        for (Move coup : coups) {
+            verifierTemps();
+
+            Board copie = new Board(board);
+            copie.play(coup, joueurActuel);
+
+            int score = alphaBeta(copie,profondeur - 1,alpha,beta,false,maCouleur);
+
+            meilleurScore = Math.min(meilleurScore, score);
+            beta = Math.min(beta, meilleurScore);
+
+            if (alpha >= beta) {
+                break;
+            }
+        }
+
+        return meilleurScore;
     }
 
-    private void ordonnerCoupsRacine(Board board,List<Move> coups,Mark maCouleur) {
+    public void ordonnerCoupsRacine(Board board,List<Move> coups,Mark maCouleur
+    ) {
         coups.sort(Comparator.comparingInt((Move coup) -> scoreOrdreRacine(board, coup, maCouleur)).reversed());
     }
 
-    private int scoreOrdreRacine( Board board,Move coup,Mark maCouleur) {
+    public int scoreOrdreRacine( Board board,Move coup,Mark maCouleur) {
 
         Board copie = new Board(board);
         copie.play(coup, maCouleur);
@@ -221,7 +229,7 @@ class IntelligenceArtificielle {
         return score;
     }
 
-    private Move chercherVictoireImmediate(Board board,Mark maCouleur,List<Move> coups) {
+    public Move chercherVictoireImmediate(Board board,Mark maCouleur,List<Move> coups) {
         for (Move coup : coups) {
             verifierTemps();
 
@@ -236,7 +244,7 @@ class IntelligenceArtificielle {
         return null;
     }
 
-    private Move choisirCoupDeSecours(List<Move> coups) {
+    public Move choisirCoupDeSecours(List<Move> coups) {
         if (dernierCoupIA == null) {
             return coups.get(0);
         }
@@ -250,7 +258,7 @@ class IntelligenceArtificielle {
         return coups.get(0);
     }
 
-    private boolean prefererAuDepartage(Move candidat,Move meilleurActuel) {
+    public boolean prefererAuDepartage(Move candidat,Move meilleurActuel) {
         if (candidat == null) {
             return false;
         }
@@ -270,13 +278,13 @@ class IntelligenceArtificielle {
         return System.currentTimeMillis() - debut >= LIMITE_TEMPS;
     }
 
-    private void verifierTemps() {
+    public void verifierTemps() {
         if (temps()) {
             throw new TempsEcouleException();
         }
     }
 
-    private boolean estCoupInverse(
+    public boolean estCoupInverse(
             Move coup,
             Move precedent
     ) {
@@ -287,7 +295,7 @@ class IntelligenceArtificielle {
         return coup.getRowDepart()  == precedent.getRowArrive() && coup.getColDepart() == precedent.getColArrive() && coup.getRowArrive()  == precedent.getRowDepart() && coup.getColArrive() == precedent.getColDepart();
     }
 
-    private Mark adversaire(Mark joueur) {
+    public Mark adversaire(Mark joueur) {
         if (joueur == Mark.ROUGE) {
             return Mark.NOIR;
         }

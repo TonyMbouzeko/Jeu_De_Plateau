@@ -6,19 +6,30 @@ import java.util.List;
 
 class Client {
 
-    private static final int PROFONDEUR_IA = 15;
+    public static final int PROFONDEUR_IA = 15;
 
     Socket MyClient;
     BufferedInputStream input;
     BufferedOutputStream output;
 
-    public Client() throws IOException {
-        MyClient = new Socket("localhost", 8888);
+    public Client(String adresse, int port) throws IOException {
+        MyClient = new Socket(adresse, port);
         input = new BufferedInputStream(MyClient.getInputStream());
         output = new BufferedOutputStream(MyClient.getOutputStream());
     }
 
     public static void main(String[] args) {
+
+        String adresse = "localhost";
+        int port = 8888;
+
+        if (args.length >= 1) {
+            adresse = args[0];
+        }
+
+        if (args.length >= 2) {
+            port = Integer.parseInt(args[1]);
+        }
 
         List<String> coupsRefusesCeTour = new ArrayList<>();
 
@@ -27,7 +38,7 @@ class Client {
         boolean partieTerminee = false;
 
         try {
-            Client client = new Client();
+            Client client = new Client(adresse, port);
             Board b = new Board();
 
             IntelligenceArtificielle iA = new IntelligenceArtificielle();
@@ -291,7 +302,7 @@ class Client {
     }
 
 
-    private static Move calculerCoup(
+    public static Move calculerCoup(
         IntelligenceArtificielle ia,
         Board board,
         Mark couleur
@@ -330,7 +341,7 @@ class Client {
         return mouvement;
     }
 
-    private static String[] lirePlateauExactement(
+    public static String[] lirePlateauExactement(
         BufferedInputStream input
     ) throws IOException {
 
@@ -362,7 +373,7 @@ class Client {
         return valeurs;
     }
 
-    private static String lireCoupServeur(
+    public static String lireCoupServeur(
         BufferedInputStream input
     ) throws IOException {
 
@@ -415,7 +426,7 @@ class Client {
         return coup;
     }
 
-    private static void dormirLecture() throws IOException {
+    public static void dormirLecture() throws IOException {
         try {
             Thread.sleep(2);
         } catch (InterruptedException e) {
@@ -424,7 +435,7 @@ class Client {
         }
     }
 
-    private static String lireMessageDisponible(
+    public static String lireMessageDisponible(
         BufferedInputStream input,
         int tailleMax
     ) throws IOException {
@@ -486,7 +497,7 @@ class Client {
         ).trim();
     }
 
-    private static void envoyerCoup(
+    public static void envoyerCoup(
         BufferedOutputStream output,
         String move
     ) throws IOException {
@@ -505,7 +516,7 @@ class Client {
         output.flush();
     }
 
-    private static String formatMoveToServer(
+    public static String formatMoveToServer(
         Move m
     ) {
 
